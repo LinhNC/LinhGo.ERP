@@ -1,1 +1,11 @@
-﻿/.idea/
+﻿# JetBrains Rider
+*.sln.iml
+.idea/
+*.DotSettings.user
+
+# JetBrains IDEs (WebStorm, IntelliJ, PhpStorm, etc)
+.idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
