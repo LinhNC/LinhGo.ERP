@@ -1,5 +1,5 @@
 @using LinhGo.ERP.Core.Models
-@inject NavigationManager navigationManager;
+@inject NavigationManager NavigationManager;
 @if (!Menu.New && !Menu.Updated && !Menu.Pro)
 {
     <RadzenPanelMenuItem @bind-Expanded=@Menu.Expanded Text="@Menu.Title" Path="@GetUrl()" Icon="@Menu.Icon" aria-label="@Menu.Name" ChildContent=@ChildContent />
@@ -8,7 +8,7 @@ else
 {
     <RadzenPanelMenuItem @bind-Expanded=@Menu.Expanded Text="@Menu.Title" Path="@GetUrl()" Icon="@Menu.Icon" aria-label="@Menu.Name" ChildContent="@ChildContent">
         <Template>
-            @Menu.Name
+            @Menu.Title
             <RadzenBadge Text="Updated" Visible=@Menu.Updated BadgeStyle="BadgeStyle.Info"/>
             <RadzenBadge Text="New" Visible=@Menu.New BadgeStyle="BadgeStyle.Success"/>
             <RadzenBadge Text="Pro" Visible=@Menu.Pro BadgeStyle="BadgeStyle.Danger"/>
@@ -17,13 +17,13 @@ else
 }
 @code {
     [Parameter]
-    public  PanelMenu Menu { get; set; }
+    public PanelMenu Menu { get; set; }
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }
 
     string GetUrl()
     {
-        return $"{Menu.Path}{new Uri(navigationManager.Uri).Query}";
+        return Menu.Path == null ? Menu.Path : $"{Menu.Path}{new Uri(NavigationManager.Uri).Query}";
     }
 }

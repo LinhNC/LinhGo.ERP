@@ -3,6 +3,7 @@
 @inherits LayoutComponentBase
 @inject NavigationManager UriHelper
 @inject ISystemMenuService SystemMenuService
+@inject ThemeService ThemeService
 
 <Canonical />
 
@@ -73,6 +74,8 @@
         _menu = await SystemMenuService.GetCurrentPanelMenu(new Uri(UriHelper.Uri));
 
         System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+
+        ThemeService.SetWcag(true);
     }
 
 

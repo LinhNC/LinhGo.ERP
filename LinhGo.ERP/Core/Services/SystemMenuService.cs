@@ -34,10 +34,9 @@ public class SystemMenuService : ISystemMenuService
             new PanelMenu
             {
                 Name = "inventory",
-                Icon = "",
+                Icon = "\ue9ce",
                 Title = "Inventory",
                 Description = "Manage products, stock levels, and warehouses",
-                Expanded = false,
                 Children =
                 [
                     new PanelMenu
