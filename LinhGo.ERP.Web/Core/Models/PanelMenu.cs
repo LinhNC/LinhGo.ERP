@@ -1,4 +1,4 @@
-﻿namespace LinhGo.ERP.Core.Models;
+﻿namespace LinhGo.ERP.Web.Core.Models;
 
 public class PanelMenu
 {

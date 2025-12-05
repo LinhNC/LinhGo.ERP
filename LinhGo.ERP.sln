@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sources", "Sources", "{328A5D0E-4C9A-4B3C-9F39-B5F6D88FD338}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinhGo.ERP.Web", "LinhGo.ERP.Web\LinhGo.ERP.Web.csproj", "{D4D8C0EB-F2DF-46C1-9E33-FF52888A4955}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{3DF3FAE7-E7C7-4969-89D6-11040058DC62}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D4D8C0EB-F2DF-46C1-9E33-FF52888A4955}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4D8C0EB-F2DF-46C1-9E33-FF52888A4955}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4D8C0EB-F2DF-46C1-9E33-FF52888A4955}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4D8C0EB-F2DF-46C1-9E33-FF52888A4955}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D4D8C0EB-F2DF-46C1-9E33-FF52888A4955} = {328A5D0E-4C9A-4B3C-9F39-B5F6D88FD338}
+	EndGlobalSection
+EndGlobal

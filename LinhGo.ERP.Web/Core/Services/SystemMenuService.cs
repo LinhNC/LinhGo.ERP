@@ -1,7 +1,7 @@
-﻿using LinhGo.ERP.Core.Interfaces;
-using LinhGo.ERP.Core.Models;
+﻿using LinhGo.ERP.Web.Core.Interfaces;
+using LinhGo.ERP.Web.Core.Models;
 
-namespace LinhGo.ERP.Core.Services;
+namespace LinhGo.ERP.Web.Core.Services;
 
 public class SystemMenuService : ISystemMenuService
 {

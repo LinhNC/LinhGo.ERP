@@ -1,6 +1,6 @@
-using LinhGo.ERP.Components;
-using LinhGo.ERP.Core.Interfaces;
-using LinhGo.ERP.Core.Services;
+using LinhGo.ERP.Web.Components;
+using LinhGo.ERP.Web.Core.Interfaces;
+using LinhGo.ERP.Web.Core.Services;
 using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);

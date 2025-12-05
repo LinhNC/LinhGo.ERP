@@ -1,5 +1,5 @@
-﻿@using LinhGo.ERP.Core.Models
-@using LinhGo.ERP.Core.Interfaces
+﻿@using LinhGo.ERP.Web.Core.Models
+@using LinhGo.ERP.Web.Core.Interfaces
 @inherits LayoutComponentBase
 @inject NavigationManager UriHelper
 @inject ISystemMenuService SystemMenuService
@@ -40,6 +40,14 @@
                     <RadzenRow class="rz-mx-auto" Style="max-width: 1600px;">
                         <RadzenColumn Size="12">
                             @Body
+                            <RadzenText TextStyle="TextStyle.Body1" TextAlign="TextAlign.Center" class="rz-mt-12">
+                                <span>Radzen Blazor Components, &copy; 2018-2025 Radzen.</span> <br />
+                                <RadzenLink Path="https://github.com/radzenhq/radzen-blazor" target="_blank">Source Code</RadzenLink> licensed under
+                                <RadzenLink Path="https://github.com/radzenhq/radzen-blazor/blob/master/LICENSE" target="_blank">MIT</RadzenLink>
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1" TextAlign="TextAlign.Center">
+                                <Social />
+                            </RadzenText>
                         </RadzenColumn>
                     </RadzenRow>
                 </RadzenColumn>
