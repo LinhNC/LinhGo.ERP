@@ -6,14 +6,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: lerp-blazor-app
+    container_name: linhgo-erp-app
     restart: unless-stopped
     ports:
       - "8080:8080"
-      - "8081:8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:8080;https://+:8081
+      - ASPNETCORE_URLS=http://+:8080
       - Logging__LogLevel__Default=Information
       - Logging__LogLevel__Microsoft.AspNetCore=Warning
     volumes:
