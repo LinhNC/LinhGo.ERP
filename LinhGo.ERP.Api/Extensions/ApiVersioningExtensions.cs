@@ -1,0 +1,26 @@
+﻿namespace LinhGo.ERP.Api.Extensions;
+
+public static class ApiVersioningExtensions
+{
+    public static IServiceCollection AddApiVersioningWithExplorer(this IServiceCollection services)
+    {
+        services.AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+                options.ApiVersionReader = Asp.Versioning.ApiVersionReader.Combine(
+                    new Asp.Versioning.UrlSegmentApiVersionReader(),
+                    new Asp.Versioning.HeaderApiVersionReader("X-Api-Version"),
+                    new Asp.Versioning.QueryStringApiVersionReader("api-version")
+                );
+            }).AddMvc()
+            .AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV";
+                options.SubstituteApiVersionInUrl = true;
+            });
+
+        return services;
+    }
+}
