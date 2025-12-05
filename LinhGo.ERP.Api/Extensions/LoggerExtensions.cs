@@ -1,7 +1,6 @@
 ﻿using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Extensions.Hosting;
 
 namespace LinhGo.ERP.Api.Extensions;
 

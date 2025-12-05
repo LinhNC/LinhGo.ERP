@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace LinhGo.ERP.Api.Configuarations;
+namespace LinhGo.ERP.Api.Configurations;
 
 public class ServiceConfigurations
 {

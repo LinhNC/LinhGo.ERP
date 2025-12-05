@@ -1,5 +1,4 @@
 ﻿using LinhGo.ERP.Api.Services;
-using LinhGo.ERP.Application.Common.Constants;
 using LinhGo.ERP.Application.Common.Errors;
 using LinhGo.ERP.Application.Common.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,14 +9,14 @@ namespace LinhGo.ERP.Api.Filters;
 /// <summary>
 /// Validates model state and returns standardized localized error response
 /// </summary>
-public class ValidateModelStateAttribute(IErrorMessageLocalizer localizer, ICorrelationIdService correlationIdService)
+public class ValidateModelStateAttribute(IErrorMessageLocalizer localizer, ICorrelationIdService correlationIdService, ILanguageCodeService languageCodeService)
     : ActionFilterAttribute
 {
     public override void OnActionExecuting(ActionExecutingContext context)
     {
         if (!context.ModelState.IsValid)
         {
-            var languageCode = context.HttpContext.Items["Language"]?.ToString() ?? GeneralConstants.DefaultLanguage;
+            var languageCode = languageCodeService.GetCurrentLanguageCode();
             
             var errors = context.ModelState
                 .Where(x => x.Value?.Errors.Count > 0)

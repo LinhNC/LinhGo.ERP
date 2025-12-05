@@ -20,6 +20,6 @@ public interface IErrorMessageLocalizer
     /// <param name="languageCode">The language code (e.g., "en", "vi")</param>
     /// <param name="args">Optional arguments for string formatting</param>
     /// <returns>Localized error message</returns>
-    string GetErrorMessage(string errorCode, string languageCode, params object[] args);
+    string GetErrorMessage(string errorCode, string languageCode, params object[]? args);
 }
 

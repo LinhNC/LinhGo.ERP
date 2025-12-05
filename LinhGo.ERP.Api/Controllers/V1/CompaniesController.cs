@@ -71,7 +71,6 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] CreateCompanyDto dto)
     {
-
         var result = await companyService.CreateAsync(dto);
         return ToCreatedResponse(result, nameof(GetById), new { id = result.IsError ? Guid.Empty : result.Value.Id });
     }

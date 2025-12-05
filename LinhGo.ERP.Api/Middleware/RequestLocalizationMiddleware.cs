@@ -1,24 +1,16 @@
 ﻿using System.Globalization;
+using LinhGo.ERP.Application.Common.Constants;
 
 namespace LinhGo.ERP.Api.Middleware;
 
 /// <summary>
 /// Middleware to set the culture based on the Accept-Language header
 /// </summary>
-public class RequestLocalizationMiddleware
+public class RequestLocalizationMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-    private readonly string[] _supportedLanguages = { "en", "vi" };
-    private const string DefaultLanguage = "en";
-
-    public RequestLocalizationMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
-
     public async Task InvokeAsync(HttpContext context)
     {
-        var languageCode = GetLanguageFromHeader(context) ?? DefaultLanguage;
+        var languageCode = GetLanguageFromHeader(context) ?? GeneralConstants.DefaultLanguage;
         
         // Set the culture for this request
         var culture = new CultureInfo(languageCode);
@@ -26,9 +18,9 @@ public class RequestLocalizationMiddleware
         CultureInfo.CurrentUICulture = culture;
         
         // Store language in HttpContext items for later use
-        context.Items["Language"] = languageCode;
+        context.Items[GeneralConstants.LanguageHeaderName] = languageCode;
 
-        await _next(context);
+        await next(context);
     }
 
     private string? GetLanguageFromHeader(HttpContext context)
@@ -49,7 +41,7 @@ public class RequestLocalizationMiddleware
         // Find first supported language
         foreach (var lang in languages)
         {
-            if (_supportedLanguages.Contains(lang, StringComparer.OrdinalIgnoreCase))
+            if (GeneralConstants.SupportedLanguages.Contains(lang, StringComparer.OrdinalIgnoreCase))
             {
                 return lang.ToLower();
             }

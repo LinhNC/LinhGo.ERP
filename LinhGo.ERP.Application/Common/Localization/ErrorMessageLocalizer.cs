@@ -26,7 +26,7 @@ public class ErrorMessageLocalizer(
         return GetErrorMessage(errorCode, currentLanguage, args);
     }
 
-    public string GetErrorMessage(string errorCode, string languageCode, params object[] args)
+    public string GetErrorMessage(string errorCode, string languageCode, params object[]? args)
     {
         try
         {
@@ -143,16 +143,16 @@ public class ErrorMessageLocalizer(
         return errorCodes;
     }
 
-    private string FormatMessage(string message, object[] args)
+    private string FormatMessage(string message, object[]? args)
     {
         try
         {
-            return args.Length > 0 ? string.Format(message, args) : message;
+            return args?.Length > 0 ? string.Format(message, args) : message;
         }
         catch (FormatException ex)
         {
             logger.LogError(ex, "Error formatting message: {Message} with args: {Args}",
-                message, string.Join(", ", args));
+                message, string.Join(", ", args ?? Array.Empty<object>()));
             return message;
         }
     }

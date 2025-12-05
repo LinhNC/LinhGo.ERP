@@ -1,4 +1,4 @@
-﻿using LinhGo.ERP.Api.Configuarations;
+﻿using LinhGo.ERP.Api.Configurations;
 
 namespace LinhGo.ERP.Api.Extensions;
 

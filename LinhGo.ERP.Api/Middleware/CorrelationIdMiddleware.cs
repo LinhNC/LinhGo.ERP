@@ -6,17 +6,8 @@ namespace LinhGo.ERP.Api.Middleware;
 /// <summary>
 /// Middleware to handle correlation IDs for request tracing
 /// </summary>
-public class CorrelationIdMiddleware
+public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<CorrelationIdMiddleware> _logger;
-
-    public CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-    }
-
     public async Task InvokeAsync(HttpContext context)
     {
         var correlationId = GetOrCreateCorrelationId(context);
@@ -38,14 +29,14 @@ public class CorrelationIdMiddleware
         Activity.Current?.SetTag("correlation_id", correlationId);
 
         // Log the correlation ID
-        using (_logger.BeginScope(new Dictionary<string, object>
+        using (logger.BeginScope(new Dictionary<string, object>
         {
             ["CorrelationId"] = correlationId,
             ["RequestPath"] = context.Request.Path,
             ["RequestMethod"] = context.Request.Method
         }))
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Request started: {Method} {Path} [CorrelationId: {CorrelationId}]",
                 context.Request.Method,
                 context.Request.Path,
@@ -53,11 +44,11 @@ public class CorrelationIdMiddleware
 
             try
             {
-                await _next(context);
+                await next(context);
             }
             finally
             {
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Request completed: {Method} {Path} [CorrelationId: {CorrelationId}] - Status: {StatusCode}",
                     context.Request.Method,
                     context.Request.Path,
@@ -67,7 +58,7 @@ public class CorrelationIdMiddleware
         }
     }
 
-    private string GetOrCreateCorrelationId(HttpContext context)
+    private static string GetOrCreateCorrelationId(HttpContext context)
     {
         // Try to get correlation ID from request header
         if (context.Request.Headers.TryGetValue(GeneralConstants.CorrelationIdHeaderName, out var correlationId) 

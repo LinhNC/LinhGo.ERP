@@ -1,30 +1,33 @@
-﻿using LinhGo.ERP.Api.Configuarations;
+﻿using LinhGo.ERP.Api.Configurations;
 using Microsoft.Extensions.Options;
 
 namespace LinhGo.ERP.Api.Extensions;
 
 public static class ServiceConfigurationsExtensions
 {
-    public static IServiceCollection AddConfigurations(this IServiceCollection services, IConfiguration configuration)
+    extension(IServiceCollection services)
     {
-        services.AddAndValidateSingleton<ServiceConfigurations>(configuration);
-        services.AddAndValidateSingleton<ConnectionStrings>(configuration.GetRequiredSection(nameof(ConnectionStrings)));
-        services.AddAndValidateSingleton<CorsPolicySettings>(configuration.GetRequiredSection(nameof(CorsPolicySettings)));
+        public IServiceCollection AddConfigurations(IConfiguration configuration)
+        {
+            services.AddAndValidateSingleton<ServiceConfigurations>(configuration);
+            services.AddAndValidateSingleton<ConnectionStrings>(configuration.GetRequiredSection(nameof(ConnectionStrings)));
+            services.AddAndValidateSingleton<CorsPolicySettings>(configuration.GetRequiredSection(nameof(CorsPolicySettings)));
         
-        return services;
-    }
+            return services;
+        }
 
-    public static IServiceCollection AddAndValidateSingleton<TOptions>(this IServiceCollection services, IConfiguration configuration)
-        where TOptions : class, new()
-    {
-        services
-            .AddOptions<TOptions>()
-            .Bind(configuration)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+        private IServiceCollection AddAndValidateSingleton<TOptions>(IConfiguration configuration)
+            where TOptions : class, new()
+        {
+            services
+                .AddOptions<TOptions>()
+                .Bind(configuration)
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
 
-        services.AddSingleton(serviceProvider => serviceProvider.GetRequiredService<IOptions<TOptions>>().Value);
+            services.AddSingleton(serviceProvider => serviceProvider.GetRequiredService<IOptions<TOptions>>().Value);
 
-        return services;
+            return services;
+        }
     }
 }

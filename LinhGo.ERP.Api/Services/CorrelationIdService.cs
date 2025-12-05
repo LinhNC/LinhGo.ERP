@@ -13,18 +13,11 @@ public interface ICorrelationIdService
 /// <summary>
 /// Service implementation for accessing correlation ID from HTTP context
 /// </summary>
-public class CorrelationIdService : ICorrelationIdService
+public class CorrelationIdService(IHttpContextAccessor httpContextAccessor) : ICorrelationIdService
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public CorrelationIdService(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
-
     public string GetCorrelationId()
     {
-        var context = _httpContextAccessor.HttpContext;
+        var context = httpContextAccessor.HttpContext;
         
         if (context?.Items.TryGetValue(GeneralConstants.CorrelationIdHeaderName, out var correlationId) == true)
         {

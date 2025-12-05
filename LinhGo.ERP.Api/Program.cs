@@ -17,9 +17,9 @@ try
     builder.Host.UseSerilog();
 
     // Add Api and Application and Infrastructure layers
-    builder.Services.AddApi(builder.Configuration);
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddApi(builder.Configuration);
 
     var app = builder.Build();
     try

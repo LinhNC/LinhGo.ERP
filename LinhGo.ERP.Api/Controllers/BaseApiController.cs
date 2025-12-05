@@ -1,9 +1,7 @@
 ﻿using LinhGo.ERP.Api.Services;
 using LinhGo.ERP.Application.Common;
-using LinhGo.ERP.Application.Common.Constants;
 using LinhGo.ERP.Application.Common.Localization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace LinhGo.ERP.Api.Controllers;
 
@@ -23,6 +21,9 @@ public abstract class BaseApiController : ControllerBase
     protected ICorrelationIdService CorrelationIdService =>
         field ??= HttpContext.RequestServices.GetRequiredService<ICorrelationIdService>();
     
+    protected ILanguageCodeService LanguageCodeService =>
+        field ??= HttpContext.RequestServices.GetRequiredService<ILanguageCodeService>();
+    
 
     /// <summary>
     /// Converts a Result to an appropriate HTTP response based on error type
@@ -37,12 +38,12 @@ public abstract class BaseApiController : ControllerBase
         
         var correlationId = CorrelationIdService.GetCorrelationId();
         var error = result.FirstError;
-        var languageCode = HttpContext.Items["Language"]?.ToString() ?? GeneralConstants.DefaultLanguage;
+        var languageCode = LanguageCodeService.GetCurrentLanguageCode();
             
         var errors = result.Errors.Select(e =>
         {
             // Use Parameters property if available, otherwise empty array
-            var parameters = e.Parameters ?? Array.Empty<object>();
+            var parameters = e.Parameters;
             
             return new
             {
