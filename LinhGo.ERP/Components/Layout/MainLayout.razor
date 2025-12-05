@@ -1,0 +1,98 @@
+﻿@using LinhGo.ERP.Core.Models
+@using LinhGo.ERP.Core.Interfaces
+@inherits LayoutComponentBase
+@inject NavigationManager UriHelper
+@inject ISystemMenuService SystemMenuService
+
+<Canonical />
+
+<RadzenComponents @rendermode=InteractiveAuto />
+
+<RadzenLayout>
+<RadzenHeader class="rz-p-0">
+    <ChildContent>
+        <MainTopNav />
+        <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" Gap="0px" class="demos-nav">
+            <RadzenColumn Size="5">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                    <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+                    <span style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Radzen Blazor Components</span>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="7">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End">
+                    <div class="rz-display-none rz-display-sm-inline-flex align-items-center">
+                        <RadzenLink Path="/docs/api" Text="API Reference" title="Radzen Blazor Components API Reference" class="rz-mx-2 rz-mx-lg-4" target="_blank" />
+                        <RadzenLink Path="https://github.com/radzenhq/radzen-blazor" Text="GitHub" title="Star Radzen Blazor Components on GitHub" class="rz-text-nowrap rz-mx-2 rz-mx-lg-4" target="_blank" />
+                    </div>
+                    <RadzenAppearanceToggle class="rz-mx-2" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </ChildContent>
+</RadzenHeader>
+<RadzenBody @ref="@body0">
+    <ChildContent>
+        <RadzenContentContainer Name="main">
+            <RadzenRow Gap="2rem" class="rz-pt-6 rz-px-0 rz-px-sm-8 rz-px-xl-12">
+                <RadzenColumn Size="12">
+                    <RadzenRow class="rz-mx-auto" Style="max-width: 1600px;">
+                        <RadzenColumn Size="12">
+                            @Body
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenContentContainer>
+    </ChildContent>
+</RadzenBody>
+<RadzenSidebar @ref="sidebar0" Position="SidebarPosition.Start" @bind-Expanded="@sidebarExpanded" class="demos-sidebar" style="display: flex; flex-direction: column">
+    <PanelNavMenu />
+</RadzenSidebar>
+</RadzenLayout>
+
+@if (!rendered)
+{
+<div class="rz-app-loading">
+    <div class="logo-loading"></div>
+</div>
+}
+
+@code {
+    RadzenSidebar sidebar0;
+    RadzenBody body0;
+    bool sidebarExpanded = true;
+    bool rendered;
+
+    PanelMenu? _menu;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UriHelper.LocationChanged += OnLocationChanged;
+
+        _menu = await SystemMenuService.GetCurrentPanelMenu(new Uri(UriHelper.Uri));
+
+        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+    }
+
+
+    void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        var currentMenu = SystemMenuService.GetCurrentPanelMenu(new Uri(args.Location)).Result;
+
+        if (currentMenu != _menu)
+        {
+            _menu = currentMenu;
+
+            StateHasChanged();
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            rendered = true;
+        }
+    }
+}

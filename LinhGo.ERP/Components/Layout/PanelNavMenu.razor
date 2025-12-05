@@ -1,0 +1,56 @@
+@using LinhGo.ERP.Core.Interfaces
+@using LinhGo.ERP.Core.Models
+@inject ISystemMenuService SystemMenuService
+
+<div style="padding: 1rem">
+    <RadzenTextBox id="find" Placeholder="Find component ..." type="search" @oninput="@FilterPanelMenu" style="width: 100%" class="rz-search-input" aria-label="find" />
+</div>
+<div style="flex: 1; overflow: auto">
+    <RadzenPanelMenu Match="NavLinkMatch.Prefix">
+        @foreach (var menu in _menus)
+        {
+            @if (menu.Children != null)
+            {
+                <NavigationItem @key=menu Menu=@menu>
+                    @foreach (var secondLevelMenu in menu.Children)
+                    {
+                        if (secondLevelMenu.Children != null)
+                        {
+                            <NavigationItem @key=secondLevelMenu Menu=@secondLevelMenu>
+                                @foreach (var thirdLevelMenu in secondLevelMenu.Children)
+                                {
+                                    <NavigationItem @key=thirdLevelMenu Menu=@thirdLevelMenu />
+                                }
+                            </NavigationItem>
+                        }
+                        else
+                        {
+                            <NavigationItem @key=secondLevelMenu Menu=@secondLevelMenu />
+                        }
+                    }
+                </NavigationItem>
+            }
+            else
+            {
+                <NavigationItem @key=menu Menu=@menu />
+            }
+        }
+    </RadzenPanelMenu>
+</div>
+@code {
+    IEnumerable<PanelMenu>? _menus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _menus = await SystemMenuService.GetAllPanelMenus();
+    }
+
+    async Task FilterPanelMenu(ChangeEventArgs args)
+    {
+        var term = args.Value?.ToString();
+
+        _menus = string.IsNullOrEmpty(term) ? 
+            await SystemMenuService.GetAllPanelMenus() : 
+            await SystemMenuService.FilterPanelMenus(term);
+    }
+}

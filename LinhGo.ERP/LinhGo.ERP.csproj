@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Radzen.Blazor" Version="8.3.6" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Modules\Inventory\Models\" />
+      <Folder Include="Modules\Inventory\Services\" />
+    </ItemGroup>
+
+</Project>
