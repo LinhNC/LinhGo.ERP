@@ -1,10 +1,12 @@
-﻿using LinhGo.ERP.Api.Extensions;
+﻿using FluentValidation;
+using LinhGo.ERP.Api.Extensions;
 using LinhGo.ERP.Api.Filters;
 using LinhGo.ERP.Api.Middleware;
 using LinhGo.ERP.Api.Services;
 using LinhGo.ERP.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
 namespace LinhGo.ERP.Api;
 
@@ -13,11 +15,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         // Add services to the container.
-        services.AddControllers(options =>
-        {
-            // Add global model validation filter
-            options.Filters.Add<ValidateModelStateAttribute>();
-        })
+        services.AddControllers()
         .ConfigureApiBehaviorOptions(options =>
         {
             // Disable automatic model validation - we'll handle it with our filter
@@ -25,6 +23,13 @@ public static class DependencyInjection
         });
 
         services.AddConfigurations(configuration);
+        
+        services.AddFluentValidationAutoValidation(cfg =>
+        {
+            // Replace the default result factory with a custom implementation.
+            cfg.OverrideDefaultResultFactoryWith<ValidateModelResultFactory>();
+        });
+        services.AddValidatorsFromAssemblyContaining(typeof(Application.AssemblyInformation));
         // Add CORS
         services.AddCors();
 

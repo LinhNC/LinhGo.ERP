@@ -12,19 +12,19 @@ public class CreateCompanyValidator : AbstractValidator<CreateCompanyDto>
     public CreateCompanyValidator()
     {
         RuleFor(x => x.Code)
-            .NotEmpty().WithMessage("Company code is required")
+            .NotEmpty().WithMessage(CompanyErrors.NameRequired)
             .WithErrorCode(CompanyErrors.NameRequired)
-            .MaximumLength(50).WithMessage("Company code must not exceed 50 characters")
+            .MaximumLength(50).WithMessage(CompanyErrors.NameTooLong)
             .WithErrorCode(CompanyErrors.NameTooLong);
 
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Company name is required")
+            .NotEmpty().WithMessage(CompanyErrors.NameRequired)
             .WithErrorCode(CompanyErrors.NameRequired)
-            .MaximumLength(200).WithMessage("Company name must not exceed 200 characters")
+            .MaximumLength(200).WithMessage(CompanyErrors.NameTooLong)
             .WithErrorCode(CompanyErrors.NameTooLong);
 
         RuleFor(x => x.Email)
-            .EmailAddress().WithMessage("Invalid email format")
+            .EmailAddress().WithMessage(UserErrors.EmailInvalid)
             .WithErrorCode(UserErrors.EmailInvalid)
             .MaximumLength(255).WithMessage("Email must not exceed 255 characters")
             .When(x => !string.IsNullOrEmpty(x.Email));
