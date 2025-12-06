@@ -5,6 +5,7 @@ using LinhGo.ERP.Application.Common.Errors;
 using LinhGo.ERP.Application.DTOs.Companies;
 using LinhGo.ERP.Domain.Companies.Entities;
 using LinhGo.ERP.Domain.Companies.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace LinhGo.ERP.Application.Services;
@@ -120,6 +121,8 @@ public class CompanyService(
                 logger.LogWarning("Mismatched company ID in update request: {RouteId} vs {DtoId}", id, dto.Id);
                 return Error.WithValidationCode(CompanyErrors.IdMismatch, id, dto.Id);
             }
+            
+            // Fetch existing entity from database
             var existing = await companyRepository.GetByIdAsync(dto.Id);
             if (existing == null)
             {
@@ -127,11 +130,21 @@ public class CompanyService(
                 return Error.WithNotFoundCode(CompanyErrors.NotFound, dto.Id);
             }
 
+            // Map DTO to existing entity (preserves Code and other unmapped fields)
+            // Version from DTO will be used for concurrency check
             mapper.Map(dto, existing);
+            
+            // Update entity - will throw DbUpdateConcurrencyException if Version doesn't match database
             await companyRepository.UpdateAsync(existing);
             
             var result = mapper.Map<CompanyDto>(existing);
             return result;
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            // Concurrency conflict: Entity was modified by another user
+            logger.LogWarning(ex, "Concurrency conflict updating company with ID {CompanyId}", dto.Id);
+            return Error.WithConflictCode(CompanyErrors.ConcurrencyConflict);
         }
         catch (Exception ex)
         {

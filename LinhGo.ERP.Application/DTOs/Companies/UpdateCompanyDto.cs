@@ -9,5 +9,11 @@ public class UpdateCompanyDto
     public string? Phone { get; set; }
     public string? Website { get; set; }
     public bool IsActive { get; set; }
+    
+    /// <summary>
+    /// Concurrency token to prevent concurrent update conflicts.
+    /// Must match the current database value for update to succeed.
+    /// </summary>
+    public uint Version { get; set; } 
 }
 

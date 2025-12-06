@@ -18,7 +18,9 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         CreateMap<Company, CompanyDto>();
-        CreateMap<CreateCompanyDto, Company>().ForMember(d => d.Id, opt => opt.Ignore());
+        CreateMap<CreateCompanyDto, Company>()
+            .ForMember(d => d.Id, opt => opt.Ignore())
+            .ForMember(d => d.Version, opt => opt.Ignore());
         CreateMap<UpdateCompanyDto, Company>().ForMember(d => d.Code, opt => opt.Ignore());
 
         CreateMap<User, UserDto>();

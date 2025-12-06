@@ -13,6 +13,13 @@ public abstract class BaseEntity
     public string? DeletedBy { get; set; }
     public DateTime? DeletedAt { get; set; }
     public bool IsDeleted { get; set; } = false;
+    
+    /// <summary>
+    /// Concurrency token for optimistic locking.
+    /// Maps to xmin (PostgreSQL) or rowversion (SQL Server).
+    /// Automatically managed by database to prevent concurrent update conflicts.
+    /// </summary>
+    public uint Version { get; set; }
 }
 
 

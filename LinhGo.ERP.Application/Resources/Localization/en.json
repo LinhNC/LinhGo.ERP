@@ -12,6 +12,7 @@
   "COMPANY_CODE_DUPLICATE": "Company code already exists",
   "COMPANY_DUPLICATE_CODE": "Company code '{0}' already exists",
   "COMPANY_ID_MISMATCH": "Company ID mismatch. Route ID {0} does not match request body ID {1}",
+  "COMPANY_CONCURRENCY_CONFLICT": "The company has been modified by another user. Please refresh and try again",
   
   "USER_NOTFOUND": "User with ID {0} not found",
   "USER_CREATE_FAILED": "Failed to create user",

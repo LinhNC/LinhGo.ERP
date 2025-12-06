@@ -55,6 +55,8 @@ public class ErpDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var isPostgreSQL = Database.IsNpgsql();
+        
         UseSnakeCaseNamingConvention(modelBuilder);
         
         base.OnModelCreating(modelBuilder);
@@ -62,11 +64,12 @@ public class ErpDbContext : DbContext
         // Apply all configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ErpDbContext).Assembly);
 
-        // Global query filters for soft delete
+        // Global query filters for soft delete and configure concurrency token
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
             {
+                // Configure soft delete query filter
                 var parameter = Expression.Parameter(entityType.ClrType, "e");
                 var property = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
                 var filter = Expression.Lambda(
@@ -75,6 +78,27 @@ public class ErpDbContext : DbContext
                 );
 
                 entityType.SetQueryFilter(filter);
+                
+                // Configure Version as concurrency token (database-specific)
+                if (isPostgreSQL)
+                {
+                    // PostgreSQL: Use xmin system column (read-only, auto-updated by PostgreSQL)
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property<uint>(nameof(BaseEntity.Version))
+                        .HasColumnName("xmin")
+                        .HasColumnType("xid")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .IsConcurrencyToken();
+                }
+                else
+                {
+                    // SQL Server: Use rowversion (timestamp)
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property<byte[]>(nameof(BaseEntity.Version))
+                        .IsRowVersion()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .IsConcurrencyToken();
+                }
             }
         }
     }

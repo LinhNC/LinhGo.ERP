@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LinhGo.ERP.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -45,7 +45,8 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     updated_by = table.Column<string>(type: "text", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -91,6 +92,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -118,6 +120,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -156,7 +159,8 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     updated_by = table.Column<string>(type: "text", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -189,6 +193,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -212,7 +217,8 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     updated_by = table.Column<string>(type: "text", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -248,6 +254,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -282,6 +289,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -351,6 +359,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -409,6 +418,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -440,7 +450,8 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     updated_by = table.Column<string>(type: "text", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -480,6 +491,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -516,6 +528,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -552,6 +565,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -579,7 +593,8 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     updated_by = table.Column<string>(type: "text", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -618,6 +633,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -680,6 +696,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -731,6 +748,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -771,6 +789,7 @@ namespace LinhGo.ERP.Infrastructure.Migrations
                     deleted_by = table.Column<string>(type: "text", nullable: true),
                     deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     company_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>

@@ -1,4 +1,5 @@
 ﻿namespace LinhGo.ERP.Application.DTOs.Companies;
+
 public class CompanyDto
 {
     public Guid Id { get; set; }
@@ -12,4 +13,9 @@ public class CompanyDto
     public string? Currency { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    
+    /// <summary>
+    /// Concurrency token. Include this in update requests to prevent concurrent update conflicts.
+    /// </summary>
+    public uint Version { get; set; }
 }

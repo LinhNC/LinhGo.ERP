@@ -38,8 +38,34 @@ public class GenericRepository<T>(ErpDbContext context) : IRepository<T>
 
     public virtual async Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
     {
-        DbSet.Update(entity);
+        // Get the entry for the entity
+        var entry = Context.Entry(entity);
+        
+        // Store the version sent by the client (for concurrency check)
+        var clientVersion = entity.Version;
+        
+        if (entry.State == EntityState.Detached)
+        {
+            // Entity is not tracked, we need to attach it
+            DbSet.Attach(entity);
+            entry.State = EntityState.Modified;
+            
+            // Set the original version to what the client sent
+            // EF Core will generate: UPDATE ... WHERE Version = {clientVersion}
+            entry.Property(nameof(BaseEntity.Version)).OriginalValue = clientVersion;
+        }
+        else
+        {
+            // Entity is already tracked (fetched earlier in the service)
+            // Set the original version to what the client sent for concurrency check
+            entry.Property(nameof(BaseEntity.Version)).OriginalValue = clientVersion;
+        }
+        
+        // Save changes - will throw DbUpdateConcurrencyException if versions don't match
         await Context.SaveChangesAsync(cancellationToken);
+        
+        // Reload the entity to get the updated Version (xmin in PostgreSQL)
+        await entry.ReloadAsync(cancellationToken);
     }
 
     public virtual async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
