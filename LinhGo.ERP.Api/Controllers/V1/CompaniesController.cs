@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using LinhGo.ERP.Api.Models;
 using LinhGo.ERP.Application.Abstractions.Services;
 using LinhGo.ERP.Application.Common.Constants;
 using LinhGo.ERP.Application.Common.Errors;
@@ -16,7 +17,8 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<CompanyDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAll()
     {
         var result = await companyService.GetAllAsync();
@@ -28,7 +30,8 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     /// </summary>
     [HttpGet("active")]
     [ProducesResponseType(typeof(IEnumerable<CompanyDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetActiveCompanies()
     {
         var result = await companyService.GetActiveCompaniesAsync();
@@ -40,8 +43,9 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     /// </summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(CompanyDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await companyService.GetByIdAsync(id);
@@ -53,8 +57,9 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     /// </summary>
     [HttpGet("code/{code}")]
     [ProducesResponseType(typeof(CompanyDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetByCode(string code)
     {
         var result = await companyService.GetByCodeAsync(code);
@@ -66,9 +71,9 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(CompanyDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] CreateCompanyDto dto)
     {
         var result = await companyService.CreateAsync(dto);
@@ -80,9 +85,10 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     /// </summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(CompanyDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCompanyDto dto)
     {
         var result = await companyService.UpdateAsync(id, dto);
@@ -94,8 +100,9 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     /// </summary>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await companyService.DeleteAsync(id);

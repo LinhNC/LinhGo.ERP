@@ -1,4 +1,5 @@
-﻿using LinhGo.ERP.Api.Services;
+﻿using LinhGo.ERP.Api.Models;
+using LinhGo.ERP.Api.Services;
 using LinhGo.ERP.Application.Common;
 using LinhGo.ERP.Application.Common.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,50 +41,26 @@ public abstract class BaseApiController : ControllerBase
         var error = result.FirstError;
         var languageCode = LanguageCodeService.GetCurrentLanguageCode();
             
-        var errors = result.Errors.Select(e =>
+        var errors = result.Errors.Select(e => new ErrorDetail
         {
-            // Use Parameters property if available, otherwise empty array
-            var parameters = e.Parameters;
-            
-            return new
-            {
-                Code = e.Code,
-                Description = ResourceLocalizer.GetMessage(e.Code, languageCode, parameters)
-            };
+            Code = e.Code,
+            Description = ResourceLocalizer.GetMessage(e.Code, languageCode, e.Parameters)
         }).ToList();
+
+        var errorResponse = new ErrorResponse
+        {
+            Type = error.Type.ToString(),
+            Errors = errors,
+            CorrelationId = correlationId
+        };
             
         return error.Type switch
         {
-            ErrorType.NotFound => NotFound(new
-            {
-                Type = error.Type.ToString(),
-                Errors = errors,
-                CorrelationId = correlationId
-            }),
-            ErrorType.Validation => BadRequest(new
-            {
-                Type = error.Type.ToString(),
-                Errors = errors,
-                CorrelationId = correlationId
-            }),
-            ErrorType.Conflict => Conflict(new
-            {
-                Type = error.Type.ToString(),
-                Errors = errors,
-                CorrelationId = correlationId
-            }),
-            ErrorType.Failure => BadRequest(new
-            {
-                Type = error.Type.ToString(),
-                Errors = errors,
-                CorrelationId = correlationId
-            }),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, new
-            {
-                Type = error.Type.ToString(),
-                Errors = errors,
-                CorrelationId = correlationId
-            })
+            ErrorType.NotFound => NotFound(errorResponse),
+            ErrorType.Validation => BadRequest(errorResponse),
+            ErrorType.Conflict => Conflict(errorResponse),
+            ErrorType.Failure => BadRequest(errorResponse),
+            _ => StatusCode(StatusCodes.Status500InternalServerError, errorResponse)
         };
 
     }
