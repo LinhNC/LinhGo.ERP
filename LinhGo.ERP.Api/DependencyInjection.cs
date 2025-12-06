@@ -30,6 +30,7 @@ public static class DependencyInjection
             cfg.OverrideDefaultResultFactoryWith<ValidateModelResultFactory>();
         });
         services.AddValidatorsFromAssemblyContaining(typeof(Application.AssemblyInformation));
+        
         // Add CORS
         services.AddCors();
 
