@@ -39,6 +39,10 @@ public class MappingProfile : Profile
         CreateMap<Product, ProductDetailsDto>().IncludeBase<Product, ProductDto>();
         CreateMap<ProductVariant, ProductVariantDto>();
         CreateMap<Stock, ProductStockDto>().ForMember(d => d.WarehouseName, opt => opt.MapFrom(s => s.Warehouse!.Name));
+        
+        // Audit mappings
+        CreateMap<LinhGo.ERP.Domain.Audit.Entities.AuditLog, LinhGo.ERP.Application.DTOs.Audit.AuditLogDto>();
+        CreateMap<LinhGo.ERP.Domain.Audit.Entities.AuditLog, LinhGo.ERP.Application.DTOs.Audit.AuditLogDetailDto>();
         CreateMap<CreateProductDto, Product>().ForMember(d => d.Id, opt => opt.Ignore()).ForMember(d => d.CompanyId, opt => opt.Ignore());
         CreateMap<UpdateProductDto, Product>().ForMember(d => d.CompanyId, opt => opt.Ignore()).ForMember(d => d.Code, opt => opt.Ignore());
 

@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using LinhGo.ERP.Domain.Audit.Entities;
 using Microsoft.EntityFrameworkCore;
 using LinhGo.ERP.Domain.Common;
 using LinhGo.ERP.Domain.Companies.Entities;
@@ -7,6 +9,7 @@ using LinhGo.ERP.Domain.Users.Entities;
 using LinhGo.ERP.Domain.Customers.Entities;
 using LinhGo.ERP.Domain.Inventory.Entities;
 using LinhGo.ERP.Domain.Orders.Entities;
+using LinhGo.ERP.Infrastructure.Data.Audit;
 
 namespace LinhGo.ERP.Infrastructure.Data;
 
@@ -52,6 +55,9 @@ public class ErpDbContext : DbContext
     public DbSet<OrderPayment> OrderPayments { get; set; }
     public DbSet<OrderShipment> OrderShipments { get; set; }
     public DbSet<OrderShipmentItem> OrderShipmentItems { get; set; }
+    
+    // Audit
+    public DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -103,10 +109,116 @@ public class ErpDbContext : DbContext
         }
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // Capture audit entries before saving
+        var auditEntries = BeforeSaveChanges();
+        
+        // Update audit fields
         UpdateAuditFields();
-        return base.SaveChangesAsync(cancellationToken);
+        
+        // Save changes to database
+        var result = await base.SaveChangesAsync(cancellationToken);
+        
+        // Save audit logs after successful save
+        await AfterSaveChanges(auditEntries, cancellationToken);
+        
+        return result;
+    }
+
+    private List<AuditEntry> BeforeSaveChanges()
+    {
+        ChangeTracker.DetectChanges();
+        var auditEntries = new List<AuditEntry>();
+
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+        {
+            // Skip audit log entries themselves and unchanged entities
+            if (entry.Entity is AuditLog || entry.State == EntityState.Unchanged || entry.State == EntityState.Detached)
+                continue;
+
+            var auditEntry = new AuditEntry(entry)
+            {
+                EntityId = entry.Entity.Id.ToString(),
+                // TODO: Get from current user context
+                UserId = entry.Entity.CreatedBy,
+                UserName = entry.Entity.CreatedBy,
+                CompanyId = GetCompanyIdFromEntity(entry.Entity)
+            };
+
+            auditEntries.Add(auditEntry);
+
+            foreach (var property in entry.Properties)
+            {
+                string propertyName = property.Metadata.Name;
+                
+                // Skip these properties from audit
+                if (propertyName is nameof(BaseEntity.CreatedAt) 
+                    or nameof(BaseEntity.UpdatedAt) 
+                    or nameof(BaseEntity.CreatedBy) 
+                    or nameof(BaseEntity.UpdatedBy)
+                    or nameof(BaseEntity.DeletedBy)
+                    or nameof(BaseEntity.DeletedAt)
+                    or nameof(BaseEntity.IsDeleted)
+                    or nameof(BaseEntity.Version))
+                    continue;
+
+                if (entry.State == EntityState.Added)
+                {
+                    auditEntry.Action = "Create";
+                    auditEntry.NewValues[propertyName] = property.CurrentValue;
+                    auditEntry.AffectedColumns.Add(propertyName);
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    if (property.IsModified)
+                    {
+                        auditEntry.Action = entry.Entity.IsDeleted ? "Delete" : "Update";
+                        auditEntry.OldValues[propertyName] = property.OriginalValue;
+                        auditEntry.NewValues[propertyName] = property.CurrentValue;
+                        auditEntry.AffectedColumns.Add(propertyName);
+                    }
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    auditEntry.Action = "Delete";
+                    auditEntry.OldValues[propertyName] = property.OriginalValue;
+                    auditEntry.AffectedColumns.Add(propertyName);
+                }
+            }
+        }
+
+        return auditEntries;
+    }
+
+    private async Task AfterSaveChanges(List<AuditEntry> auditEntries, CancellationToken cancellationToken)
+    {
+        if (auditEntries.Count == 0)
+            return;
+
+        foreach (var auditEntry in auditEntries)
+        {
+            var auditLog = new AuditLog
+            {
+                EntityName = auditEntry.EntityName,
+                EntityId = auditEntry.EntityId,
+                Action = auditEntry.Action,
+                Timestamp = DateTime.UtcNow,
+                UserId = auditEntry.UserId,
+                UserName = auditEntry.UserName,
+                CompanyId = auditEntry.CompanyId,
+                OldValues = auditEntry.OldValues.Count > 0 ? JsonSerializer.Serialize(auditEntry.OldValues) : null,
+                NewValues = auditEntry.NewValues.Count > 0 ? JsonSerializer.Serialize(auditEntry.NewValues) : null,
+                AffectedColumns = auditEntry.AffectedColumns.Count > 0 ? string.Join(", ", auditEntry.AffectedColumns) : null,
+                PrimaryKey = auditEntry.EntityId,
+                IpAddress = auditEntry.IpAddress,
+                UserAgent = auditEntry.UserAgent
+            };
+
+            AuditLogs.Add(auditLog);
+        }
+
+        await base.SaveChangesAsync(cancellationToken);
     }
 
     private void UpdateAuditFields()
@@ -119,12 +231,14 @@ public class ErpDbContext : DbContext
             {
                 case EntityState.Added:
                     entry.Entity.CreatedAt = DateTime.UtcNow;
-                    // Set CreatedBy from current user context
+                    // TODO: Set CreatedBy from current user context
+                    // entry.Entity.CreatedBy = _currentUserService.UserId;
                     break;
 
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = DateTime.UtcNow;
-                    // Set UpdatedBy from current user context
+                    // TODO: Set UpdatedBy from current user context
+                    // entry.Entity.UpdatedBy = _currentUserService.UserId;
                     break;
 
                 case EntityState.Deleted:
@@ -132,10 +246,23 @@ public class ErpDbContext : DbContext
                     entry.State = EntityState.Modified;
                     entry.Entity.IsDeleted = true;
                     entry.Entity.DeletedAt = DateTime.UtcNow;
-                    // Set DeletedBy from current user context
+                    // TODO: Set DeletedBy from current user context
+                    // entry.Entity.DeletedBy = _currentUserService.UserId;
                     break;
             }
         }
+    }
+
+    private Guid? GetCompanyIdFromEntity(object entity)
+    {
+        // Try to get CompanyId property using reflection
+        var companyIdProperty = entity.GetType().GetProperty("CompanyId");
+        if (companyIdProperty != null)
+        {
+            var value = companyIdProperty.GetValue(entity);
+            return value as Guid?;
+        }
+        return null;
     }
     
     private static void UseSnakeCaseNamingConvention(ModelBuilder modelBuilder)

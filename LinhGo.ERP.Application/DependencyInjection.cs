@@ -18,7 +18,7 @@ public static class DependencyInjection
         });
         
         services.AddScoped<ICompanyService, CompanyService>();
-       
+        
         return services;
     }
 }
