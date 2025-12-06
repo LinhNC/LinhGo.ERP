@@ -5,20 +5,19 @@ using LinhGo.ERP.Infrastructure.Data;
 
 namespace LinhGo.ERP.Infrastructure.Repositories;
 
-public class UserPermissionRepository : GenericRepository<UserPermission>, IUserPermissionRepository
+public class UserPermissionRepository(ErpDbContext context)
+    : GenericRepository<UserPermission>(context), IUserPermissionRepository
 {
-    public UserPermissionRepository(ErpDbContext context) : base(context) { }
-
     public async Task<IEnumerable<UserPermission>> GetByUserCompanyIdAsync(Guid userCompanyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Where(up => up.UserCompanyId == userCompanyId)
             .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<UserPermission>> GetByUserAndCompanyAsync(Guid userId, Guid companyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(up => up.UserCompany)
             .Where(up => up.UserCompany!.UserId == userId && up.UserCompany.CompanyId == companyId)
             .ToListAsync(cancellationToken);
@@ -26,13 +25,13 @@ public class UserPermissionRepository : GenericRepository<UserPermission>, IUser
 
     public async Task<UserPermission?> GetByPermissionKeyAsync(Guid userCompanyId, string permissionKey, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .FirstOrDefaultAsync(up => up.UserCompanyId == userCompanyId && up.PermissionKey == permissionKey, cancellationToken);
     }
 
     public async Task<bool> HasPermissionAsync(Guid userId, Guid companyId, string permissionKey, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(up => up.UserCompany)
             .AnyAsync(up => up.UserCompany!.UserId == userId && 
                            up.UserCompany.CompanyId == companyId && 
@@ -43,7 +42,7 @@ public class UserPermissionRepository : GenericRepository<UserPermission>, IUser
 
     public async Task<IEnumerable<string>> GetUserPermissionKeysAsync(Guid userId, Guid companyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(up => up.UserCompany)
             .Where(up => up.UserCompany!.UserId == userId && 
                         up.UserCompany.CompanyId == companyId && 
@@ -63,8 +62,8 @@ public class UserPermissionRepository : GenericRepository<UserPermission>, IUser
                 UserCompanyId = userCompanyId,
                 PermissionKey = permissionKey
             };
-            await _dbSet.AddAsync(permission, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+            await DbSet.AddAsync(permission, cancellationToken);
+            await Context.SaveChangesAsync(cancellationToken);
         }
     }
 
@@ -74,8 +73,8 @@ public class UserPermissionRepository : GenericRepository<UserPermission>, IUser
         
         if (permission != null)
         {
-            _dbSet.Remove(permission);
-            await _context.SaveChangesAsync(cancellationToken);
+            DbSet.Remove(permission);
+            await Context.SaveChangesAsync(cancellationToken);
         }
     }
 
@@ -94,8 +93,8 @@ public class UserPermissionRepository : GenericRepository<UserPermission>, IUser
 
         if (newPermissions.Any())
         {
-            await _dbSet.AddRangeAsync(newPermissions, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+            await DbSet.AddRangeAsync(newPermissions, cancellationToken);
+            await Context.SaveChangesAsync(cancellationToken);
         }
     }
 
@@ -105,8 +104,8 @@ public class UserPermissionRepository : GenericRepository<UserPermission>, IUser
         
         if (permissions.Any())
         {
-            _dbSet.RemoveRange(permissions);
-            await _context.SaveChangesAsync(cancellationToken);
+            DbSet.RemoveRange(permissions);
+            await Context.SaveChangesAsync(cancellationToken);
         }
     }
 }

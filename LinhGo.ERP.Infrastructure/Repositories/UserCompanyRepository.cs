@@ -5,13 +5,12 @@ using LinhGo.ERP.Infrastructure.Data;
 
 namespace LinhGo.ERP.Infrastructure.Repositories;
 
-public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompanyRepository
+public class UserCompanyRepository(ErpDbContext context)
+    : GenericRepository<UserCompany>(context), IUserCompanyRepository
 {
-    public UserCompanyRepository(ErpDbContext context) : base(context) { }
-
     public async Task<UserCompany?> GetByUserAndCompanyAsync(Guid userId, Guid companyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(uc => uc.Company)
             .Include(uc => uc.Permissions)
             .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.CompanyId == companyId, cancellationToken);
@@ -19,7 +18,7 @@ public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompan
 
     public async Task<IEnumerable<UserCompany>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(uc => uc.Company)
             .Where(uc => uc.UserId == userId)
             .ToListAsync(cancellationToken);
@@ -27,7 +26,7 @@ public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompan
 
     public async Task<IEnumerable<UserCompany>> GetByCompanyIdAsync(Guid companyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(uc => uc.User)
             .Where(uc => uc.CompanyId == companyId)
             .ToListAsync(cancellationToken);
@@ -35,7 +34,7 @@ public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompan
 
     public async Task<IEnumerable<UserCompany>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(uc => uc.Company)
             .Where(uc => uc.UserId == userId && uc.IsActive)
             .ToListAsync(cancellationToken);
@@ -43,7 +42,7 @@ public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompan
 
     public async Task<IEnumerable<UserCompany>> GetActiveByCompanyIdAsync(Guid companyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(uc => uc.User)
             .Where(uc => uc.CompanyId == companyId && uc.IsActive)
             .ToListAsync(cancellationToken);
@@ -51,13 +50,13 @@ public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompan
 
     public async Task<bool> IsUserAssignedToCompanyAsync(Guid userId, Guid companyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .AnyAsync(uc => uc.UserId == userId && uc.CompanyId == companyId && uc.IsActive, cancellationToken);
     }
 
     public async Task<UserCompany?> GetWithPermissionsAsync(Guid userId, Guid companyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(uc => uc.Company)
             .Include(uc => uc.Permissions)
             .Include(uc => uc.User)
@@ -73,7 +72,7 @@ public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompan
             // User already assigned, just update role and activate
             existing.Role = role;
             existing.IsActive = true;
-            _dbSet.Update(existing);
+            DbSet.Update(existing);
         }
         else
         {
@@ -85,10 +84,10 @@ public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompan
                 Role = role,
                 IsActive = true
             };
-            await _dbSet.AddAsync(userCompany, cancellationToken);
+            await DbSet.AddAsync(userCompany, cancellationToken);
         }
         
-        await _context.SaveChangesAsync(cancellationToken);
+        await Context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RemoveUserFromCompanyAsync(Guid userId, Guid companyId, CancellationToken cancellationToken = default)
@@ -99,8 +98,8 @@ public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompan
         {
             // Soft delete by marking as inactive
             userCompany.IsActive = false;
-            _dbSet.Update(userCompany);
-            await _context.SaveChangesAsync(cancellationToken);
+            DbSet.Update(userCompany);
+            await Context.SaveChangesAsync(cancellationToken);
         }
     }
 
@@ -111,8 +110,8 @@ public class UserCompanyRepository : GenericRepository<UserCompany>, IUserCompan
         if (userCompany != null)
         {
             userCompany.Role = role;
-            _dbSet.Update(userCompany);
-            await _context.SaveChangesAsync(cancellationToken);
+            DbSet.Update(userCompany);
+            await Context.SaveChangesAsync(cancellationToken);
         }
     }
 }

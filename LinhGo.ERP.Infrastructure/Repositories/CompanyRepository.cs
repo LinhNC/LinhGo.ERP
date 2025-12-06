@@ -5,27 +5,25 @@ using LinhGo.ERP.Infrastructure.Data;
 
 namespace LinhGo.ERP.Infrastructure.Repositories;
 
-public class CompanyRepository : GenericRepository<Company>, ICompanyRepository
+public class CompanyRepository(ErpDbContext context) : GenericRepository<Company>(context), ICompanyRepository
 {
-    public CompanyRepository(ErpDbContext context) : base(context) { }
-
     public async Task<Company?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(c => c.Settings)
             .FirstOrDefaultAsync(c => c.Code == code, cancellationToken);
     }
 
     public async Task<IEnumerable<Company>> GetActiveCompaniesAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Where(c => c.IsActive)
             .ToListAsync(cancellationToken);
     }
 
     public async Task<bool> IsCodeUniqueAsync(string code, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
-        var query = _dbSet.Where(c => c.Code == code);
+        var query = DbSet.Where(c => c.Code == code);
 
         if (excludeId.HasValue)
             query = query.Where(c => c.Id != excludeId.Value);

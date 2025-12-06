@@ -5,13 +5,11 @@ using LinhGo.ERP.Infrastructure.Data;
 
 namespace LinhGo.ERP.Infrastructure.Repositories;
 
-public class CustomerRepository : TenantRepository<Customer>, ICustomerRepository
+public class CustomerRepository(ErpDbContext context) : TenantRepository<Customer>(context), ICustomerRepository
 {
-    public CustomerRepository(ErpDbContext context) : base(context) { }
-
     public async Task<Customer?> GetByCodeAsync(Guid companyId, string code, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(c => c.Contacts)
             .Include(c => c.Addresses)
             .FirstOrDefaultAsync(c => c.CompanyId == companyId && c.Code == code, cancellationToken);
@@ -19,14 +17,14 @@ public class CustomerRepository : TenantRepository<Customer>, ICustomerRepositor
 
     public async Task<IEnumerable<Customer>> GetActiveCustomersAsync(Guid companyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Where(c => c.CompanyId == companyId && c.IsActive)
             .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Customer>> SearchCustomersAsync(Guid companyId, string searchTerm, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Where(c => c.CompanyId == companyId &&
                 (c.Name.Contains(searchTerm) ||
                  c.Code.Contains(searchTerm) ||
@@ -36,7 +34,7 @@ public class CustomerRepository : TenantRepository<Customer>, ICustomerRepositor
 
     public async Task<bool> IsCodeUniqueAsync(Guid companyId, string code, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
-        var query = _dbSet.Where(c => c.CompanyId == companyId && c.Code == code);
+        var query = DbSet.Where(c => c.CompanyId == companyId && c.Code == code);
 
         if (excludeId.HasValue)
             query = query.Where(c => c.Id != excludeId.Value);
@@ -46,7 +44,7 @@ public class CustomerRepository : TenantRepository<Customer>, ICustomerRepositor
 
     public async Task<Customer?> GetWithDetailsAsync(Guid companyId, Guid id, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(c => c.Contacts)
             .Include(c => c.Addresses)
             .FirstOrDefaultAsync(c => c.CompanyId == companyId && c.Id == id, cancellationToken);

@@ -6,13 +6,12 @@ using LinhGo.ERP.Infrastructure.Data;
 
 namespace LinhGo.ERP.Infrastructure.Repositories;
 
-public class InventoryTransactionRepository : TenantRepository<InventoryTransaction>, IInventoryTransactionRepository
+public class InventoryTransactionRepository(ErpDbContext context)
+    : TenantRepository<InventoryTransaction>(context), IInventoryTransactionRepository
 {
-    public InventoryTransactionRepository(ErpDbContext context) : base(context) { }
-
     public async Task<InventoryTransaction?> GetByTransactionNumberAsync(Guid companyId, string transactionNumber, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(it => it.Product)
             .Include(it => it.FromWarehouse)
             .Include(it => it.ToWarehouse)
@@ -21,7 +20,7 @@ public class InventoryTransactionRepository : TenantRepository<InventoryTransact
 
     public async Task<IEnumerable<InventoryTransaction>> GetByProductAsync(Guid companyId, Guid productId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(it => it.FromWarehouse)
             .Include(it => it.ToWarehouse)
             .Where(it => it.CompanyId == companyId && it.ProductId == productId)
@@ -31,7 +30,7 @@ public class InventoryTransactionRepository : TenantRepository<InventoryTransact
 
     public async Task<IEnumerable<InventoryTransaction>> GetByWarehouseAsync(Guid companyId, Guid warehouseId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(it => it.Product)
             .Where(it => it.CompanyId == companyId && 
                         (it.FromWarehouseId == warehouseId || it.ToWarehouseId == warehouseId))
@@ -41,7 +40,7 @@ public class InventoryTransactionRepository : TenantRepository<InventoryTransact
 
     public async Task<IEnumerable<InventoryTransaction>> GetByTypeAsync(Guid companyId, TransactionType type, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(it => it.Product)
             .Include(it => it.FromWarehouse)
             .Include(it => it.ToWarehouse)
@@ -52,7 +51,7 @@ public class InventoryTransactionRepository : TenantRepository<InventoryTransact
 
     public async Task<IEnumerable<InventoryTransaction>> GetByDateRangeAsync(Guid companyId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(it => it.Product)
             .Include(it => it.FromWarehouse)
             .Include(it => it.ToWarehouse)
@@ -65,7 +64,7 @@ public class InventoryTransactionRepository : TenantRepository<InventoryTransact
 
     public async Task<IEnumerable<InventoryTransaction>> GetByReferenceAsync(Guid companyId, string referenceType, Guid referenceId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(it => it.Product)
             .Include(it => it.FromWarehouse)
             .Include(it => it.ToWarehouse)
@@ -93,7 +92,7 @@ public class InventoryTransactionRepository : TenantRepository<InventoryTransact
         
         var prefix = $"{typePrefix}-{year}-";
         
-        var lastTransaction = await _dbSet
+        var lastTransaction = await DbSet
             .Where(it => it.CompanyId == companyId && it.TransactionNumber.StartsWith(prefix))
             .OrderByDescending(it => it.TransactionNumber)
             .FirstOrDefaultAsync(cancellationToken);

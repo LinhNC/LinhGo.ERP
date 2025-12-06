@@ -5,13 +5,11 @@ using LinhGo.ERP.Infrastructure.Data;
 
 namespace LinhGo.ERP.Infrastructure.Repositories;
 
-public class StockRepository : TenantRepository<Stock>, IStockRepository
+public class StockRepository(ErpDbContext context) : TenantRepository<Stock>(context), IStockRepository
 {
-    public StockRepository(ErpDbContext context) : base(context) { }
-
     public async Task<Stock?> GetByProductAndWarehouseAsync(Guid companyId, Guid productId, Guid warehouseId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .FirstOrDefaultAsync(s => s.CompanyId == companyId && 
                                       s.ProductId == productId && 
                                       s.WarehouseId == warehouseId, 
@@ -20,7 +18,7 @@ public class StockRepository : TenantRepository<Stock>, IStockRepository
 
     public async Task<IEnumerable<Stock>> GetByProductAsync(Guid companyId, Guid productId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(s => s.Warehouse)
             .Where(s => s.CompanyId == companyId && s.ProductId == productId)
             .ToListAsync(cancellationToken);
@@ -28,7 +26,7 @@ public class StockRepository : TenantRepository<Stock>, IStockRepository
 
     public async Task<IEnumerable<Stock>> GetByWarehouseAsync(Guid companyId, Guid warehouseId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(s => s.Product)
             .Where(s => s.CompanyId == companyId && s.WarehouseId == warehouseId)
             .ToListAsync(cancellationToken);
@@ -36,7 +34,7 @@ public class StockRepository : TenantRepository<Stock>, IStockRepository
 
     public async Task<IEnumerable<Stock>> GetLowStockProductsAsync(Guid companyId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Include(s => s.Product)
             .Include(s => s.Warehouse)
             .Where(s => s.CompanyId == companyId && 
@@ -58,15 +56,15 @@ public class StockRepository : TenantRepository<Stock>, IStockRepository
                 WarehouseId = warehouseId,
                 QuantityOnHand = quantityChange
             };
-            await _dbSet.AddAsync(stock, cancellationToken);
+            await DbSet.AddAsync(stock, cancellationToken);
         }
         else
         {
             stock.QuantityOnHand += quantityChange;
-            _dbSet.Update(stock);
+            DbSet.Update(stock);
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await Context.SaveChangesAsync(cancellationToken);
     }
 }
 
