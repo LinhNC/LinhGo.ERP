@@ -11,6 +11,7 @@
   "COMPANY_NAME_TOO_LONG": "Tên công ty không được vượt quá {0} ký tự",
   "COMPANY_CODE_DUPLICATE": "Mã công ty đã tồn tại",
   "COMPANY_DUPLICATE_CODE": "Mã công ty '{0}' đã tồn tại",
+  "COMPANY_ID_MISMATCH": "ID công ty không khớp. ID trong đường dẫn {0} không khớp với ID trong nội dung yêu cầu {1}",
   
   "USER_NOTFOUND": "Không tìm thấy người dùng với ID {0}",
   "USER_CREATE_FAILED": "Tạo người dùng thất bại",

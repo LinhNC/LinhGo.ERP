@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LinhGo.ERP.Api.Controllers.V1;
 
 [ApiVersion(GeneralConstants.ApiV1Version)]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/companies")]
 public class CompaniesController(ICompanyService companyService) : BaseApiController
 {
     /// <summary>
@@ -85,25 +85,7 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCompanyDto dto)
     {
-        if (id != dto.Id)
-        {
-            return BadRequest(new 
-            { 
-                Type = "Validation",
-                Errors = new[] 
-                { 
-                    new 
-                    { 
-                        Code = GeneralErrors.ValidationFailed, 
-                        Description = "ID mismatch between route and body",
-                        Field = "id"
-                    } 
-                },
-                CorrelationId = CorrelationIdService.GetCorrelationId()
-            });
-        }
-
-        var result = await companyService.UpdateAsync(dto);
+        var result = await companyService.UpdateAsync(id, dto);
         return ToResponse(result);
     }
 

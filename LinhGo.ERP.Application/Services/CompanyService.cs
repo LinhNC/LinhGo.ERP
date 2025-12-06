@@ -111,10 +111,15 @@ public class CompanyService(
         }
     }
 
-    public async Task<Result<CompanyDto>> UpdateAsync(UpdateCompanyDto dto)
+    public async Task<Result<CompanyDto>> UpdateAsync(Guid id, UpdateCompanyDto dto)
     {
         try
         {
+            if (id != dto.Id)
+            {
+                logger.LogWarning("Mismatched company ID in update request: {RouteId} vs {DtoId}", id, dto.Id);
+                return Error.WithValidationCode(CompanyErrors.IdMismatch, id, dto.Id);
+            }
             var existing = await companyRepository.GetByIdAsync(dto.Id);
             if (existing == null)
             {

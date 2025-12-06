@@ -17,5 +17,6 @@ public static class CompanyErrors
     public const string NameTooLong = "COMPANY_NAME_TOO_LONG";
     public const string CodeDuplicate = "COMPANY_CODE_DUPLICATE";
     public const string DuplicateCode = "COMPANY_DUPLICATE_CODE";
+    public const string IdMismatch = "COMPANY_ID_MISMATCH";
 }
 

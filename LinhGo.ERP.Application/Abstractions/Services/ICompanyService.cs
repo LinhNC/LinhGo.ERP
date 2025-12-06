@@ -10,6 +10,6 @@ public interface ICompanyService
     Task<Result<IEnumerable<CompanyDto>>> GetActiveCompaniesAsync();
     Task<Result<CompanyDto>> GetByCodeAsync(string code);
     Task<Result<CompanyDto>> CreateAsync(CreateCompanyDto dto);
-    Task<Result<CompanyDto>> UpdateAsync(UpdateCompanyDto dto);
+    Task<Result<CompanyDto>> UpdateAsync(Guid id, UpdateCompanyDto dto);
     Task<Result<bool>> DeleteAsync(Guid id);
 }
