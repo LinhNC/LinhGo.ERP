@@ -12,8 +12,8 @@ public abstract class BaseApiController : ControllerBase
     /// <summary>
     /// Gets the error message localizer from DI container (lazy initialization)
     /// </summary>
-    protected IErrorMessageLocalizer ErrorMessageLocalizer =>
-        field ??= HttpContext.RequestServices.GetRequiredService<IErrorMessageLocalizer>();
+    protected IResourceLocalizer ResourceLocalizer =>
+        field ??= HttpContext.RequestServices.GetRequiredService<IResourceLocalizer>();
 
     /// <summary>
     /// Gets the correlation ID service from DI container (lazy initialization)
@@ -48,7 +48,7 @@ public abstract class BaseApiController : ControllerBase
             return new
             {
                 Code = e.Code,
-                Description = ErrorMessageLocalizer.GetErrorMessage(e.Code, languageCode, parameters)
+                Description = ResourceLocalizer.GetMessage(e.Code, languageCode, parameters)
             };
         }).ToList();
             

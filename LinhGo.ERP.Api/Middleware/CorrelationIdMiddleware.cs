@@ -11,7 +11,7 @@ public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationId
     public async Task InvokeAsync(HttpContext context)
     {
         var correlationId = GetOrCreateCorrelationId(context);
-        
+
         // Add correlation ID to response headers
         context.Response.OnStarting(() =>
         {
@@ -61,7 +61,7 @@ public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationId
     private static string GetOrCreateCorrelationId(HttpContext context)
     {
         // Try to get correlation ID from request header
-        if (context.Request.Headers.TryGetValue(GeneralConstants.CorrelationIdHeaderName, out var correlationId) 
+        if (context.Request.Headers.TryGetValue(GeneralConstants.CorrelationIdHeaderName, out var correlationId)
             && !string.IsNullOrWhiteSpace(correlationId))
         {
             return correlationId.ToString();

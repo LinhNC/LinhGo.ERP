@@ -1,32 +1,39 @@
 ﻿using System.Collections.Concurrent;
 using System.Globalization;
+using System.Text.Json;
 using LinhGo.ERP.Application.Common.Constants;
 using LinhGo.ERP.Application.Common.Errors;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace LinhGo.ERP.Application.Common.Localization;
 
 /// <summary>
 /// Enhanced error message localizer using resource provider pattern
 /// </summary>
-public class ErrorMessageLocalizer(
-    ILogger<ErrorMessageLocalizer> logger,
-    IErrorMessageResourceProvider resourceProvider)
-    : IErrorMessageLocalizer
+public class ResourceLocalizer(
+    IOptions<ResourceLocalizerConfiguration> config,
+    ILogger<ResourceLocalizer> logger)
+    : IResourceLocalizer
 {
     private readonly ConcurrentDictionary<string, Dictionary<string, string>> _localizedMessages = new();
     private readonly SemaphoreSlim _loadLock = new(1, 1);
     
+    private const string DefaultResourcePath = "Resources";
+    private const string DefaultLocalizeFolder = "Localization";
+    
     // Cache error codes to avoid repeated reflection - computed once and reused
     private static readonly Lazy<HashSet<string>> AllErrorCodes = new(GetAllErrorCodesFromConstants);
 
-    public string GetErrorMessage(string errorCode, params object[] args)
+    public string GetMessage(string localizeCode, params object[] args)
     {
         var currentLanguage = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-        return GetErrorMessage(errorCode, currentLanguage, args);
+        return GetMessage(localizeCode, currentLanguage, args);
     }
 
-    public string GetErrorMessage(string errorCode, string languageCode, params object[]? args)
+    public string GetMessage(string localizeCode, string languageCode, params object[]? args)
     {
         try
         {
@@ -35,7 +42,7 @@ public class ErrorMessageLocalizer(
 
             // Try to get message in requested language
             if (_localizedMessages.TryGetValue(languageCode, out var messages) &&
-                messages.TryGetValue(errorCode, out var message))
+                messages.TryGetValue(localizeCode, out var message))
             {
                 return FormatMessage(message, args);
             }
@@ -43,22 +50,59 @@ public class ErrorMessageLocalizer(
             // Fallback to default language
             EnsureMessagesLoaded(GeneralConstants.DefaultLanguage);
             if (_localizedMessages.TryGetValue(GeneralConstants.DefaultLanguage, out var defaultMessages) &&
-                defaultMessages.TryGetValue(errorCode, out var defaultMessage))
+                defaultMessages.TryGetValue(localizeCode, out var defaultMessage))
             {
                 logger.LogWarning(
-                    "Error message for code {ErrorCode} not found in language {Language}, using default",
-                    errorCode, languageCode);
+                    "Message for code {ErrorCode} not found in language {Language}, using default",
+                    localizeCode, languageCode);
                 return FormatMessage(defaultMessage, args);
             }
 
             // If not found anywhere, return the error code itself
-            logger.LogWarning("Error message not found for code: {ErrorCode}", errorCode);
-            return errorCode;
+            logger.LogWarning("Message not found for code: {ErrorCode}", localizeCode);
+            return localizeCode;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting error message for code: {ErrorCode}", errorCode);
-            return errorCode;
+            logger.LogError(ex, "Error getting message for code: {ErrorCode}", localizeCode);
+            return localizeCode;
+        }
+    }
+    
+    public async Task<Dictionary<string, string>> LoadResourcesAsync(string languageCode)
+    {
+        try
+        {
+            var resourceFile = $"{languageCode}.json";
+            
+            string resourcePath;
+            if (config is not null && !string.IsNullOrEmpty(config.Value.ResourcePath))
+            {
+                resourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, config.Value.ResourcePath, resourceFile);
+            }
+            else
+            {
+                resourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DefaultResourcePath, DefaultLocalizeFolder, resourceFile);
+            }
+
+            if (!File.Exists(resourcePath))
+            {
+                logger.LogWarning("Resource file not found: {ResourcePath}", resourcePath);
+                return new Dictionary<string, string>();
+            }
+
+            var json = await File.ReadAllTextAsync(resourcePath);
+            var messages = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+            
+            logger.LogInformation("Loaded {Count} error messages for language {Language}", 
+                messages?.Count ?? 0, languageCode);
+            
+            return messages ?? new Dictionary<string, string>();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error loading error messages for language: {Language}", languageCode);
+            return new Dictionary<string, string>();
         }
     }
 
@@ -78,7 +122,7 @@ public class ErrorMessageLocalizer(
                 return;
             }
 
-            var messages = resourceProvider.LoadMessagesAsync(languageCode).GetAwaiter().GetResult();
+            var messages = LoadResourcesAsync(languageCode).GetAwaiter().GetResult();
             _localizedMessages.TryAdd(languageCode, messages);
 
             logger.LogInformation(
@@ -156,5 +200,28 @@ public class ErrorMessageLocalizer(
             return message;
         }
     }
+}
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddResourceLocalizer(this IServiceCollection services, Action<ResourceLocalizerConfiguration>? resourceLocalizerConfiguration = null)
+    {
+        var configuration = new ResourceLocalizerConfiguration();
+
+        if (resourceLocalizerConfiguration != null)
+        {
+            resourceLocalizerConfiguration.Invoke(configuration);
+            services.Configure(resourceLocalizerConfiguration);
+        }
+        
+        services.AddScoped<IResourceLocalizer, ResourceLocalizer>();
+        
+        return services;
+    }
+}
+
+public class ResourceLocalizerConfiguration
+{
+    public string ResourcePath { get; set; }
 }
 

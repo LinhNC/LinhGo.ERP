@@ -8,7 +8,7 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
 namespace LinhGo.ERP.Api.Filters;
 
 public class ValidateModelResultFactory(
-    IErrorMessageLocalizer localizer,
+    IResourceLocalizer localizer,
     ILanguageCodeService languageCodeService,
     ICorrelationIdService correlationIdService)
     : IFluentValidationAutoValidationResultFactory
@@ -22,7 +22,7 @@ public class ValidateModelResultFactory(
             .Where(x => x.Value?.Errors.Count > 0)
             .SelectMany(x => x.Value!.Errors.Select(e => new
             {
-                Code = GeneralErrors.ValidationFailed,
+                Code = e.ErrorMessage,
                 Description = LocalizeValidationMessage(e.ErrorMessage, languageCode),
             }))
             .ToList();
@@ -46,12 +46,12 @@ public class ValidateModelResultFactory(
     {
         if (string.IsNullOrEmpty(errorMessage))
         {
-            return localizer.GetErrorMessage(GeneralErrors.ValidationFailed, languageCode);
+            return localizer.GetMessage(GeneralErrors.ValidationFailed, languageCode);
         }
 
         // Try to localize the message (in case it's an error code)
         // If not found in localizer, return the original message from FluentValidation
-        var localizedMessage = localizer.GetErrorMessage(errorMessage, languageCode);
+        var localizedMessage = localizer.GetMessage(errorMessage, languageCode);
         
         // If localizer returns the same string (not found), use the original message
         return localizedMessage == errorMessage ? errorMessage : localizedMessage;

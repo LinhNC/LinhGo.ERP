@@ -12,8 +12,10 @@ public static class DependencyInjection
         services.AddAutoMapper(typeof(DependencyInjection).Assembly);
         
         // Add localization with resource provider pattern
-        services.AddSingleton<IErrorMessageResourceProvider, JsonErrorMessageResourceProvider>();
-        services.AddSingleton<IErrorMessageLocalizer, ErrorMessageLocalizer>();
+        services.AddResourceLocalizer(options =>
+        {
+            options.ResourcePath = Path.Combine("Resources", "Localization");
+        });
         
         services.AddScoped<ICompanyService, CompanyService>();
        
