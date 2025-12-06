@@ -55,8 +55,7 @@ public static class DependencyInjection
         {
             // Run migrations at startup
             app.MigrateDatabase();
-        
-            // Configure the HTTP request pipeline.
+            
             // Add Correlation ID middleware early in the pipeline
             app.UseCorrelationId();
         
@@ -72,8 +71,8 @@ public static class DependencyInjection
                 options
                     .WithTitle("LinhGo ERP Api")
                     .WithClassicLayout()
-                    .WithTheme(Scalar.AspNetCore.ScalarTheme.Default)
-                    .WithDefaultHttpClient(Scalar.AspNetCore.ScalarTarget.CSharp, Scalar.AspNetCore.ScalarClient.HttpClient);
+                    .WithTheme(ScalarTheme.Default)
+                    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
             });
 
             app.UseHttpsRedirection();

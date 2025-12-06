@@ -1,7 +1,7 @@
 ﻿namespace LinhGo.ERP.Application.Common;
 
 /// <summary>
-/// Present application error
+/// Represents an error with a code, description, type, and parameters.
 /// </summary>
 public readonly record struct Error
 {
@@ -11,7 +11,7 @@ public readonly record struct Error
     public string Code { get; }
 
     /// <summary>
-    /// Gets the error description (used for parameters).
+    /// Gets the error description (used for custom message).
     /// </summary>
     public string? Description { get; }
 

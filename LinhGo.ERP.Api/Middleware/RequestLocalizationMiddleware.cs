@@ -51,14 +51,3 @@ public class RequestLocalizationMiddleware(RequestDelegate next)
     }
 }
 
-/// <summary>
-/// Extension method to add the middleware to the pipeline
-/// </summary>
-public static class RequestLocalizationMiddlewareExtensions
-{
-    public static IApplicationBuilder UseLanguageLocalization(this IApplicationBuilder builder)
-    {
-        return builder.UseMiddleware<RequestLocalizationMiddleware>();
-    }
-}
-

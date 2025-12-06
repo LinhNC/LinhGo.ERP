@@ -14,5 +14,15 @@ public static class MiddlewareExtensions
     {
         return app.UseMiddleware<CorrelationIdMiddleware>();
     }
+    
+    /// <summary>
+    /// Adds language localization middleware to the pipeline
+    /// </summary>
+    /// <param name="app"></param>
+    /// <returns></returns>
+    public static IApplicationBuilder UseLanguageLocalization(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<RequestLocalizationMiddleware>();
+    }
 }
 
