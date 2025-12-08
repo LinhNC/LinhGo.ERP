@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
 using LinhGo.ERP.Api.Extensions;
 using LinhGo.ERP.Api.Filters;
-using LinhGo.ERP.Api.Middleware;
 using LinhGo.ERP.Api.Services;
+using LinhGo.ERP.Application.Common.SearchBuilders;
 using LinhGo.ERP.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -15,7 +15,10 @@ public static class DependencyInjection
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         // Add services to the container.
-        services.AddControllers()
+        services.AddControllers(options =>
+            {
+                options.ModelBinderProviders.Insert(0, new SearchQueryParamsBinderProvider());
+            })
         .ConfigureApiBehaviorOptions(options =>
         {
             // Disable automatic model validation - we'll handle it with our filter
@@ -39,7 +42,10 @@ public static class DependencyInjection
     
         // Add OpenAPI/Scalar
         services.AddEndpointsApiExplorer();
-        services.AddOpenApi();
+        services.AddOpenApi(options =>
+        {
+            options.AddOperationTransformer<SearchQueryParamsOperationTransformer>();
+        });
 
         // Add HTTP Context Accessor for correlation ID access
         services.AddHttpContextAccessor();
@@ -49,10 +55,8 @@ public static class DependencyInjection
         return services;
     }
 
-    extension(WebApplication app)
+    public static WebApplication BuildWebApplication(this WebApplication app, IConfiguration configuration)
     {
-        public WebApplication BuildWebApplication(IConfiguration configuration)
-        {
             // Run migrations at startup
             app.MigrateDatabase();
             
@@ -81,35 +85,34 @@ public static class DependencyInjection
             app.MapControllers();
         
             return app;
-        }
+    }
+    
+    private static void MigrateDatabase(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var services = scope.ServiceProvider;
 
-        private void MigrateDatabase()
+        try
         {
-            using var scope = app.Services.CreateScope();
-            var services = scope.ServiceProvider;
-
-            try
-            {
-                var context = services.GetRequiredService<ErpDbContext>();
+            var context = services.GetRequiredService<ErpDbContext>();
             
-                // Apply any pending migrations
-                if (context.Database.GetPendingMigrations().Any())
-                {
-                    Console.WriteLine("Applying pending migrations...");
-                    context.Database.Migrate();
-                    Console.WriteLine("Migrations applied successfully.");
-                }
-                else
-                {
-                    Console.WriteLine("Database is up to date.");
-                }
-            }
-            catch (Exception ex)
+            // Apply any pending migrations
+            if (context.Database.GetPendingMigrations().Any())
             {
-                var logger = services.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "An error occurred while migrating the database.");
-                throw;
+                Console.WriteLine("Applying pending migrations...");
+                context.Database.Migrate();
+                Console.WriteLine("Migrations applied successfully.");
             }
+            else
+            {
+                Console.WriteLine("Database is up to date.");
+            }
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while migrating the database.");
+            throw;
         }
     }
 }

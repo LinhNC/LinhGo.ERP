@@ -2,7 +2,9 @@
 using LinhGo.ERP.Application.Abstractions.Services;
 using LinhGo.ERP.Application.Common;
 using LinhGo.ERP.Application.Common.Errors;
+using LinhGo.ERP.Application.Common.SearchBuilders;
 using LinhGo.ERP.Application.DTOs.Companies;
+using LinhGo.ERP.Application.QueryData;
 using LinhGo.ERP.Domain.Companies.Entities;
 using LinhGo.ERP.Domain.Companies.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -13,8 +15,7 @@ namespace LinhGo.ERP.Application.Services;
 public class CompanyService(
     ICompanyRepository companyRepository,
     IMapper mapper,
-    ILogger<CompanyService> logger)
-    : ICompanyService
+    ILogger<CompanyService> logger) : ICompanyService
 {
     public async Task<Result<CompanyDto>> GetByIdAsync(Guid id)
     {
@@ -175,5 +176,17 @@ public class CompanyService(
             logger.LogError(ex, "Error deleting company with ID {CompanyId}", id);
             return Error.WithFailureCode(CompanyErrors.DeleteFailed);
         }
+    }
+
+    public async Task<Result<PagedResult<CompanyDto>>> SearchAsync(SearchQueryParams queries, CancellationToken ctx)
+    {
+        return new Result<PagedResult<CompanyDto>>();
+        // var source = companyRepository.SearchAsync()
+        // var searchEngine =
+        //     new SearchQueryEngine<Company>(CompanyQueries.FilterableFields, CompanyQueries.SortableFields);
+        //
+        // var result = searchEngine.ExecuteAsync();
+        //
+        // return result;
     }
 }
