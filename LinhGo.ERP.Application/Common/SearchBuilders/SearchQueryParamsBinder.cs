@@ -20,8 +20,8 @@ public class SearchQueryParamsBinder : IModelBinder
         var searchParams = new SearchQueryParams
         {
             Q = GetQueryValue(query, "q"),
-            Sort = GetQueryValue(query, "sort"),
-            Include = GetQueryValue(query, "include"),
+            Sorts = GetQueryValue(query, "sort"),
+            Includes = GetQueryValue(query, "include"),
             Page = GetIntValue(query, "page", defaultValue: 1),
             PageSize = GetIntValue(query, "pageSize", defaultValue: 20),
             Fields = ParseAndSortFields(GetQueryValue(query, "fields"))
@@ -64,11 +64,15 @@ public class SearchQueryParamsBinder : IModelBinder
         {
             if (!bindingContext.ModelState.IsValid) 
                 break;
+            if (searchParams.Filters is null)
+            {
+                break;
+            }
 
-            if (!searchParams.Filter.TryGetValue(entry.Field, out var operatorDict))
+            if (!searchParams.Filters.TryGetValue(entry.Field, out var operatorDict))
             {
                 operatorDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                searchParams.Filter[entry.Field] = operatorDict;
+                searchParams.Filters[entry.Field] = operatorDict;
             }
 
             operatorDict[entry.Operator] = entry.Value;

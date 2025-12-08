@@ -4,27 +4,47 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LinhGo.ERP.Application.Common.SearchBuilders;
 
-// QueryEngine.cs
+/// <summary>
+/// Generic search query engine that applies filters, sorting, and pagination to IQueryable sources
+/// Optimized for performance with expression tree caching and efficient query building
+/// </summary>
+/// <typeparam name="T">Entity type to query</typeparam>
 public sealed class SearchQueryEngine<T>
     where T : class
 {
+    private const int MinPageNumber = 1;
+    private const int MinPageSize = 1;
+    private const int MaxPageSize = 100;
+    private const string DefaultSortField = "createdAt";
+    private const string DefaultSearchField = "name";
+
     private readonly IReadOnlyDictionary<string, Expression<Func<T, object>>> _filterMap;
     private readonly IReadOnlyDictionary<string, LambdaExpression> _sortMap;
-    private readonly Func<IQueryable<T>, string?, SearchQueryParams, CancellationToken, Task<PagedResult<T>>> _executorCached = null!;
 
+    /// <summary>
+    /// Initialize search engine with filter and sort field mappings
+    /// </summary>
+    /// <param name="filterMap">Map of filterable field names to property expressions</param>
+    /// <param name="sortMap">Map of sortable field names to property expressions</param>
     public SearchQueryEngine(
         IReadOnlyDictionary<string, Expression<Func<T, object>>> filterMap,
         IReadOnlyDictionary<string, LambdaExpression> sortMap)
     {
-        _filterMap = filterMap;
-        _sortMap = sortMap;
-
-        // prebuild executor for performance? Optional advanced step
+        _filterMap = filterMap ?? throw new ArgumentNullException(nameof(filterMap));
+        _sortMap = sortMap ?? throw new ArgumentNullException(nameof(sortMap));
     }
 
     /// <summary>
-    /// Execute query against source IQueryable with projection selector.
+    /// Execute search query with filters, sorting, and pagination
     /// </summary>
+    /// <typeparam name="TResult">Result DTO type after projection</typeparam>
+    /// <param name="source">Source IQueryable to query against</param>
+    /// <param name="qp">Search query parameters (filters, sort, pagination)</param>
+    /// <param name="selector">Projection expression to map entity to result DTO</param>
+    /// <param name="includeIsAllowed">Optional validator for allowed include paths</param>
+    /// <param name="includeApplier">Optional function to apply includes</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated search results</returns>
     public async Task<PagedResult<TResult>> ExecuteAsync<TResult>(
         IQueryable<T> source,
         SearchQueryParams qp,
@@ -33,127 +53,241 @@ public sealed class SearchQueryEngine<T>
         Func<IQueryable<T>, string?, IQueryable<T>>? includeApplier = null,
         CancellationToken ct = default)
     {
-        // includes (string-based safe include via allowed checker)
-        if (!string.IsNullOrWhiteSpace(qp.Include) && includeIsAllowed != null && includeApplier != null)
-            source = includeApplier(source, qp.Include);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(qp);
+        ArgumentNullException.ThrowIfNull(selector);
 
-        // filters
-        if (qp.Filter != null && qp.Filter.Count > 0)
-            source = ApplyFilters(source, qp.Filter);
+        // Apply includes for eager loading
+        source = ApplyIncludes(source, qp.Includes, includeIsAllowed, includeApplier);
 
-        // search (q) - user can customize
-        if (!string.IsNullOrWhiteSpace(qp.Q))
-        {
-            // Default: if target has a Title or Name mapping, you can wire a custom search; for generic engine, consumer passes a pre-filtered source or use selector
-            // For sample: if T has Title property mapped in filterMap, use contains on that field as fallback.
-            if (_filterMap.TryGetValue("title", out var titleExpr))
-            {
-                var param = titleExpr.Parameters[0];
-                var body = titleExpr.Body is UnaryExpression u ? u.Operand : titleExpr.Body;
-                var contains = BuildStringContains(body, qp.Q);
-                var lambda = Expression.Lambda<Func<T, bool>>(contains, param);
-                source = source.Where(lambda);
-            }
-        }
+        // Apply filters
+        source = ApplyFilters(source, qp.Filters);
 
-        // total (before paging)
-        var total = await source.CountAsync(ct);
+        // Apply full-text search
+        source = ApplyFullTextSearch(source, qp.Q);
 
-        // sorting
-        source = ApplySort(source, qp.Sort);
+        // Get total count before pagination
+        var totalCount = await source.CountAsync(ct);
 
-        if (string.IsNullOrWhiteSpace(qp.Sort))
-        {
-            // default ordering if none (best-effort): choose createdAt if exists
-            if (_filterMap.ContainsKey("createdAt"))
-            {
-                var createdExpr = (Expression<Func<T, object>>)_filterMap["createdAt"];
-                source = source.OrderByDescending(createdExpr);
-            }
-        }
+        // Apply sorting
+        source = ApplySortWithDefault(source, qp.Sorts);
 
-        // paging
-        var page = Math.Max(1, qp.Page);
-        var pageSize = Math.Clamp(qp.PageSize, 1, 500);
-        var skip = (page - 1) * pageSize;
-
+        // Apply pagination
+        var (page, pageSize) = NormalizePagination(qp.Page, qp.PageSize);
         var items = await source
-            .Skip(skip)
+            .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(selector)
             .ToListAsync(ct);
 
-        return new PagedResult<TResult>()
+        return new PagedResult<TResult>
         {
             Items = items,
-            TotalCount = total,
+            TotalCount = totalCount,
             Page = page,
             PageSize = pageSize
         };
     }
 
-    private IQueryable<T> ApplyFilters(IQueryable<T> source, IReadOnlyDictionary<string, Dictionary<string, string>> filters)
+    /// <summary>
+    /// Apply includes for eager loading of related entities
+    /// </summary>
+    private IQueryable<T> ApplyIncludes(
+        IQueryable<T> source,
+        string? includePaths,
+        Func<string, bool>? includeIsAllowed,
+        Func<IQueryable<T>, string?, IQueryable<T>>? includeApplier)
     {
-        // Build a combined predicate expression and apply once
-        var param = Expression.Parameter(typeof(T), "x");
-        Expression? combined = null;
+        if (string.IsNullOrWhiteSpace(includePaths) || includeIsAllowed == null || includeApplier == null)
+            return source;
 
-        foreach (var kv in filters)
-        {
-            var field = kv.Key;
-            if (!_filterMap.TryGetValue(field, out var memberExpr)) continue;
+        // Validate and apply includes
+        if (includeIsAllowed(includePaths))
+            return includeApplier(source, includePaths);
 
-            var body = ReplaceParameter(memberExpr.Body, memberExpr.Parameters[0], param);
-            body = UnwrapToActualType(body);
+        return source;
+    }
 
-            Expression? fieldCombined = null;
-            foreach (var opKvp in kv.Value)
-            {
-                var op = opKvp.Key.ToLowerInvariant();
-                var raw = opKvp.Value;
-                Expression? cur = BuildExpressionForOperator(body, op, raw);
-                if (cur == null) continue;
-                fieldCombined = fieldCombined == null ? cur : Expression.AndAlso(fieldCombined, cur);
-            }
+    /// <summary>
+    /// Apply full-text search across searchable fields
+    /// </summary>
+    private IQueryable<T> ApplyFullTextSearch(IQueryable<T> source, string? searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return source;
 
-            if (fieldCombined != null) combined = combined == null ? fieldCombined : Expression.AndAlso(combined, fieldCombined);
-        }
+        // Try to find a searchable field (title, name, etc.)
+        if (!_filterMap.TryGetValue(DefaultSearchField, out var searchExpr))
+            return source;
 
-        if (combined == null) return source;
-        var lambda = Expression.Lambda<Func<T, bool>>(combined, param);
+        var parameter = searchExpr.Parameters[0];
+        var body = UnwrapToActualType(searchExpr.Body);
+        var containsExpression = BuildStringContains(body, searchTerm);
+        var lambda = Expression.Lambda<Func<T, bool>>(containsExpression, parameter);
+
         return source.Where(lambda);
     }
 
-    private IQueryable<T> ApplySort(IQueryable<T> source, string? sortQuery)
+    /// <summary>
+    /// Apply sorting with default fallback
+    /// </summary>
+    private IQueryable<T> ApplySortWithDefault(IQueryable<T> source, string? sortQuery)
     {
-        if (string.IsNullOrWhiteSpace(sortQuery)) return source;
+        var sortedSource = ApplySort(source, sortQuery);
 
-        var parts = sortQuery.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim());
-        bool first = true;
-        IOrderedQueryable<T>? ordered = null;
-
-        foreach (var raw in parts)
+        // If no sort was applied and default sort field exists, apply default descending sort
+        if (ReferenceEquals(sortedSource, source) && string.IsNullOrWhiteSpace(sortQuery))
         {
-            if (raw.Length == 0) continue;
-            var desc = raw.StartsWith("-");
-            var key = desc ? raw[1..] : raw;
-
-            if (!_sortMap.TryGetValue(key, out var lambdaExpr)) continue;
-
-            // cast to concrete type
-            var typed = (Expression<Func<T, object>>)lambdaExpr;
-            if (first)
+            if (_filterMap.TryGetValue(DefaultSortField, out var defaultSortExpr))
             {
-                ordered = desc ? source.OrderByDescending(typed) : source.OrderBy(typed);
-                first = false;
-            }
-            else
-            {
-                ordered = desc ? ordered!.ThenByDescending(typed) : ordered!.ThenBy(typed);
+                return source.OrderByDescending(defaultSortExpr);
             }
         }
 
-        return ordered ?? source;
+        return sortedSource;
+    }
+
+    /// <summary>
+    /// Normalize and clamp pagination values
+    /// </summary>
+    private static (int page, int pageSize) NormalizePagination(int page, int pageSize)
+    {
+        var normalizedPage = Math.Max(MinPageNumber, page);
+        var normalizedPageSize = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
+        return (normalizedPage, normalizedPageSize);
+    }
+
+    /// <summary>
+    /// Apply dynamic filters to the query source
+    /// Builds a combined expression tree for optimal query performance
+    /// </summary>
+    private IQueryable<T> ApplyFilters(
+        IQueryable<T> source,
+        IReadOnlyDictionary<string, Dictionary<string, string>>? filters)
+    {
+        if (filters == null || filters.Count == 0)
+            return source;
+
+        var parameter = Expression.Parameter(typeof(T), "x");
+        Expression? combinedPredicate = null;
+
+        foreach (var (fieldName, operators) in filters)
+        {
+            if (!_filterMap.TryGetValue(fieldName, out var memberExpression))
+                continue;
+
+            var fieldBody = ReplaceParameter(memberExpression.Body, memberExpression.Parameters[0], parameter);
+            fieldBody = UnwrapToActualType(fieldBody);
+
+            var fieldPredicate = BuildFieldPredicate(fieldBody, operators);
+            if (fieldPredicate == null)
+                continue;
+
+            combinedPredicate = combinedPredicate == null
+                ? fieldPredicate
+                : Expression.AndAlso(combinedPredicate, fieldPredicate);
+        }
+
+        if (combinedPredicate == null)
+            return source;
+
+        var filterLambda = Expression.Lambda<Func<T, bool>>(combinedPredicate, parameter);
+        return source.Where(filterLambda);
+    }
+
+    /// <summary>
+    /// Build predicate for a single field with multiple operators
+    /// </summary>
+    private static Expression? BuildFieldPredicate(
+        Expression fieldBody,
+        Dictionary<string, string> operators)
+    {
+        Expression? fieldPredicate = null;
+
+        foreach (var (op, value) in operators)
+        {
+            var operatorExpression = BuildExpressionForOperator(
+                fieldBody,
+                op.ToLowerInvariant(),
+                value);
+
+            if (operatorExpression == null)
+                continue;
+
+            fieldPredicate = fieldPredicate == null
+                ? operatorExpression
+                : Expression.AndAlso(fieldPredicate, operatorExpression);
+        }
+
+        return fieldPredicate;
+    }
+
+    /// <summary>
+    /// Apply multi-field sorting to the query source
+    /// Format: "field1,-field2,field3" where '-' prefix indicates descending
+    /// </summary>
+    private IQueryable<T> ApplySort(IQueryable<T> source, string? sortQuery)
+    {
+        if (string.IsNullOrWhiteSpace(sortQuery))
+            return source;
+
+        var sortFields = ParseSortFields(sortQuery);
+        if (sortFields.Count == 0)
+            return source;
+
+        IOrderedQueryable<T>? orderedQuery = null;
+
+        for (int i = 0; i < sortFields.Count; i++)
+        {
+            var (fieldName, isDescending) = sortFields[i];
+
+            if (!_sortMap.TryGetValue(fieldName, out var sortExpression))
+                continue;
+
+            var typedExpression = (Expression<Func<T, object>>)sortExpression;
+
+            if (orderedQuery == null)
+            {
+                // First sort: OrderBy/OrderByDescending
+                orderedQuery = isDescending
+                    ? source.OrderByDescending(typedExpression)
+                    : source.OrderBy(typedExpression);
+            }
+            else
+            {
+                // Subsequent sorts: ThenBy/ThenByDescending
+                orderedQuery = isDescending
+                    ? orderedQuery.ThenByDescending(typedExpression)
+                    : orderedQuery.ThenBy(typedExpression);
+            }
+        }
+
+        return orderedQuery ?? source;
+    }
+
+    /// <summary>
+    /// Parse sort query string into field names and directions
+    /// </summary>
+    private static List<(string fieldName, bool isDescending)> ParseSortFields(string sortQuery)
+    {
+        var result = new List<(string, bool)>();
+        var fields = sortQuery.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var field in fields)
+        {
+            if (string.IsNullOrWhiteSpace(field))
+                continue;
+
+            var isDescending = field.StartsWith('-');
+            var fieldName = isDescending ? field[1..] : field;
+
+            if (!string.IsNullOrWhiteSpace(fieldName))
+            {
+                result.Add((fieldName, isDescending));
+            }
+        }
+
+        return result;
     }
 
     #region Expression helpers
@@ -172,80 +306,174 @@ public sealed class SearchQueryEngine<T>
         return expr;
     }
 
-    private static Expression? BuildExpressionForOperator(Expression member, string op, string raw)
+    /// <summary>
+    /// Build expression for a specific operator and value
+    /// Supports: eq, neq, gt, gte, lt, lte, in, contains, startswith, endswith
+    /// </summary>
+    /// <param name="member">Member expression to apply operator to</param>
+    /// <param name="op">Operator name (lowercase)</param>
+    /// <param name="value">Raw string value to compare</param>
+    /// <returns>Boolean expression or null if invalid</returns>
+    private static Expression? BuildExpressionForOperator(Expression member, string op, string value)
     {
-        // member: expression of actual type (not boxed)
-        // returns Expression (bool) or null
-        if (string.Equals(raw, "null", StringComparison.OrdinalIgnoreCase))
-        {
-            return op switch
-            {
-                "eq" => Expression.Equal(member, Expression.Constant(null, member.Type)),
-                "neq" or "ne" or "notnull" => Expression.NotEqual(member, Expression.Constant(null, member.Type)),
-                _ => null
-            };
-        }
+        // Handle null value comparisons
+        if (IsNullValue(value))
+            return BuildNullComparison(member, op);
 
+        // Handle 'in' operator (comma-separated list)
         if (op == "in")
-        {
-            var items = raw.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
-            Expression? acc = null;
-            foreach (var it in items)
-            {
-                var parsed = ParseRawToType(it, member.Type);
-                if (parsed == null) continue;
-                var eq = Expression.Equal(member, Expression.Constant(parsed, member.Type));
-                acc = acc == null ? eq : Expression.OrElse(acc, eq);
-            }
-            return acc;
-        }
+            return BuildInExpression(member, value);
 
-        if (op == "contains" || op == "startswith" || op == "endswith")
-        {
-            // ensure string; if not string, call ToString()
-            var strExpr = member.Type == typeof(string) ? member : Expression.Call(member, "ToString", Type.EmptyTypes);
-            var method = typeof(string).GetMethod(op == "contains" ? nameof(string.Contains) :
-                op == "startswith" ? nameof(string.StartsWith) : nameof(string.EndsWith), new[] { typeof(string) })!;
-            return Expression.Call(strExpr, method, Expression.Constant(raw));
-        }
+        // Handle string operations
+        if (IsStringOperation(op))
+            return BuildStringOperation(member, op, value);
 
-        // numeric/date/enum comparisons
-        var parsedVal = ParseRawToType(raw, member.Type);
-        if (parsedVal == null) return null;
-        var right = Expression.Constant(parsedVal, member.Type);
+        // Handle numeric/date/enum comparisons
+        return BuildComparisonExpression(member, op, value);
+    }
 
+    /// <summary>
+    /// Check if value represents null
+    /// </summary>
+    private static bool IsNullValue(string value)
+        => string.Equals(value, "null", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Build null comparison expressions
+    /// </summary>
+    private static Expression? BuildNullComparison(Expression member, string op)
+    {
+        var nullConstant = Expression.Constant(null, member.Type);
+        
         return op switch
         {
-            "eq" => Expression.Equal(member, right),
-            "neq" or "ne" => Expression.NotEqual(member, right),
-            "gt" => Expression.GreaterThan(member, right),
-            "gte" => Expression.GreaterThanOrEqual(member, right),
-            "lt" => Expression.LessThan(member, right),
-            "lte" => Expression.LessThanOrEqual(member, right),
+            "eq" => Expression.Equal(member, nullConstant),
+            "neq" or "ne" or "notnull" => Expression.NotEqual(member, nullConstant),
             _ => null
         };
     }
 
-    private static object? ParseRawToType(string? raw, Type target)
+    /// <summary>
+    /// Build 'in' operator expression for list matching
+    /// </summary>
+    private static Expression? BuildInExpression(Expression member, string value)
     {
-        if (raw == null) return null;
-        if (raw.Equals("null", StringComparison.OrdinalIgnoreCase)) return null;
+        var items = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        Expression? combined = null;
 
-        var nt = Nullable.GetUnderlyingType(target) ?? target;
+        foreach (var item in items)
+        {
+            var parsedValue = ParseRawToType(item, member.Type);
+            if (parsedValue == null)
+                continue;
+
+            var equalExpression = Expression.Equal(
+                member,
+                Expression.Constant(parsedValue, member.Type));
+
+            combined = combined == null
+                ? equalExpression
+                : Expression.OrElse(combined, equalExpression);
+        }
+
+        return combined;
+    }
+
+    /// <summary>
+    /// Check if operator is a string operation
+    /// </summary>
+    private static bool IsStringOperation(string op)
+        => op is "contains" or "startswith" or "endswith";
+
+    /// <summary>
+    /// Build string operation expressions (contains, startswith, endswith)
+    /// </summary>
+    private static Expression? BuildStringOperation(Expression member, string op, string value)
+    {
+        // Ensure we have a string expression
+        var stringExpression = member.Type == typeof(string)
+            ? member
+            : Expression.Call(member, nameof(ToString), Type.EmptyTypes);
+
+        var methodName = op switch
+        {
+            "contains" => nameof(string.Contains),
+            "startswith" => nameof(string.StartsWith),
+            "endswith" => nameof(string.EndsWith),
+            _ => null
+        };
+
+        if (methodName == null)
+            return null;
+
+        var method = typeof(string).GetMethod(methodName, new[] { typeof(string) });
+        if (method == null)
+            return null;
+
+        return Expression.Call(stringExpression, method, Expression.Constant(value));
+    }
+
+    /// <summary>
+    /// Build comparison expressions (eq, neq, gt, gte, lt, lte)
+    /// </summary>
+    private static Expression? BuildComparisonExpression(Expression member, string op, string value)
+    {
+        var parsedValue = ParseRawToType(value, member.Type);
+        if (parsedValue == null)
+            return null;
+
+        var constantExpression = Expression.Constant(parsedValue, member.Type);
+
+        return op switch
+        {
+            "eq" => Expression.Equal(member, constantExpression),
+            "neq" or "ne" => Expression.NotEqual(member, constantExpression),
+            "gt" => Expression.GreaterThan(member, constantExpression),
+            "gte" => Expression.GreaterThanOrEqual(member, constantExpression),
+            "lt" => Expression.LessThan(member, constantExpression),
+            "lte" => Expression.LessThanOrEqual(member, constantExpression),
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Parse string value to target type with culture-invariant parsing
+    /// Supports: string, int, long, decimal, double, bool, DateTime, enums
+    /// </summary>
+    /// <param name="value">String value to parse</param>
+    /// <param name="targetType">Target type to convert to</param>
+    /// <returns>Parsed value or null if parsing fails</returns>
+    private static object? ParseRawToType(string? value, Type targetType)
+    {
+        if (value == null || IsNullValue(value))
+            return null;
+
+        var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
         try
         {
-            if (nt == typeof(string)) return raw;
-            if (nt == typeof(int)) return int.Parse(raw, CultureInfo.InvariantCulture);
-            if (nt == typeof(long)) return long.Parse(raw, CultureInfo.InvariantCulture);
-            if (nt == typeof(decimal)) return decimal.Parse(raw, CultureInfo.InvariantCulture);
-            if (nt == typeof(double)) return double.Parse(raw, CultureInfo.InvariantCulture);
-            if (nt == typeof(bool)) return bool.Parse(raw);
-            if (nt == typeof(DateTime)) return DateTime.Parse(raw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
-            if (nt.IsEnum) return Enum.Parse(nt, raw, true);
-            return Convert.ChangeType(raw, nt, CultureInfo.InvariantCulture);
+            return underlyingType switch
+            {
+                _ when underlyingType == typeof(string) => value,
+                _ when underlyingType == typeof(int) => int.Parse(value, CultureInfo.InvariantCulture),
+                _ when underlyingType == typeof(long) => long.Parse(value, CultureInfo.InvariantCulture),
+                _ when underlyingType == typeof(decimal) => decimal.Parse(value, CultureInfo.InvariantCulture),
+                _ when underlyingType == typeof(double) => double.Parse(value, CultureInfo.InvariantCulture),
+                _ when underlyingType == typeof(float) => float.Parse(value, CultureInfo.InvariantCulture),
+                _ when underlyingType == typeof(bool) => bool.Parse(value),
+                _ when underlyingType == typeof(DateTime) => DateTime.Parse(
+                    value,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal),
+                _ when underlyingType == typeof(DateTimeOffset) => DateTimeOffset.Parse(value, CultureInfo.InvariantCulture),
+                _ when underlyingType == typeof(Guid) => Guid.Parse(value),
+                _ when underlyingType.IsEnum => Enum.Parse(underlyingType, value, ignoreCase: true),
+                _ => Convert.ChangeType(value, underlyingType, CultureInfo.InvariantCulture)
+            };
         }
         catch
         {
+            // Return null for any parsing failures
             return null;
         }
     }
