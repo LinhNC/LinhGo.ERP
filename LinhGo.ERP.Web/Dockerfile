@@ -7,16 +7,16 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["LinhGo.ERP.csproj", "./"]
-RUN dotnet restore "LinhGo.ERP.csproj"
+RUN dotnet restore "LinhGo.ERP.Web.csproj"
 COPY . .
 WORKDIR "/src/"
-RUN dotnet build "./LinhGo.ERP.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./LinhGo.ERP.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./LinhGo.ERP.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./LinhGo.ERP.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "LinhGo.ERP.dll"]
+ENTRYPOINT ["dotnet", "LinhGo.ERP.Web.dll"]
