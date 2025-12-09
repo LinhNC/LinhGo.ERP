@@ -43,25 +43,16 @@ public class CompanyRepository(ErpDbContext context) : GenericRepository<Company
         // Use AsNoTracking for read-only queries - significantly improves performance
         // by avoiding the overhead of change tracking for read-only operations
         var baseQuery = DbSet.AsNoTracking();
-        
-        // Create search engine with filterable and sortable fields
-        var searchEngine = new SearchQueryEngine<Company>(FilterableFields, SortableFields);
-        
-        // Identity selector - returns the entity as-is without projection
-        // This allows EF Core to generate optimal SQL without unnecessary column selections
-        // Projection to DTO should be done at the service layer for better separation of concerns
         Expression<Func<Company, Company>> identitySelector = c => c;
-        
-        // Execute search with optimized query
-        // No includes needed for search results - keeps query simple and fast
-        var result = await searchEngine.ExecuteAsync(
-            baseQuery, 
-            queries, 
-            identitySelector,
-            includeIsAllowed: null,  // No includes allowed for search results
-            includeApplier: null,     // No include applier needed
-            cancellationToken);
-        
+
+        var searchBuilder = new SearchBuilder<Company>()
+            .WithSource(baseQuery)
+            .WithQueryParams(queries)
+            .WithSelector(identitySelector)
+            .WithFilterMapping(FilterableFields)
+            .WithSortMapping(SortableFields);
+
+        var result = await searchBuilder.BuildAsync(cancellationToken);
         return result;
     }
     

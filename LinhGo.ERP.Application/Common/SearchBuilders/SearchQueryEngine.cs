@@ -19,69 +19,91 @@ public sealed class SearchQueryEngine<T>
     private const string DefaultSortField = "createdAt";
     private const string DefaultSearchField = "name";
 
-    private readonly IReadOnlyDictionary<string, Expression<Func<T, object>>> _filterMap;
-    private readonly IReadOnlyDictionary<string, LambdaExpression> _sortMap;
+    private IQueryable<T>? _source;
+    private SearchQueryParams? _queryParams;
+    private Expression<Func<T, T>>? _selector;
+    private IReadOnlyDictionary<string, Expression<Func<T, object>>>? _filterMap;
+    private IReadOnlyDictionary<string, LambdaExpression>? _sortMap;
+    private Func<string, bool>? _includeIsAllowed;
+    private Func<IQueryable<T>, string?, IQueryable<T>>? _includeApplier;
+    
+    private PagedResult<T>? _result;
+    
+    public PagedResult<T>? Result() => _result;
 
-    /// <summary>
-    /// Initialize search engine with filter and sort field mappings
-    /// </summary>
-    /// <param name="filterMap">Map of filterable field names to property expressions</param>
-    /// <param name="sortMap">Map of sortable field names to property expressions</param>
-    public SearchQueryEngine(
-        IReadOnlyDictionary<string, Expression<Func<T, object>>> filterMap,
-        IReadOnlyDictionary<string, LambdaExpression> sortMap)
+    public void SetSource(IQueryable<T> source)
     {
-        _filterMap = filterMap ?? throw new ArgumentNullException(nameof(filterMap));
-        _sortMap = sortMap ?? throw new ArgumentNullException(nameof(sortMap));
+        _source = source;
     }
+    public void SetQueryParams(SearchQueryParams queryParams)
+    {
+        _queryParams = queryParams;
+    }
+
+    public void SetSelector(Expression<Func<T, T>> selector)
+    {
+        _selector = selector;
+    }
+    public void SetFilterMapping(IReadOnlyDictionary<string, Expression<Func<T, object>>> filterMap)
+    {
+        _filterMap = filterMap;
+    }
+    public void SetSortMapping(IReadOnlyDictionary<string, LambdaExpression> sortMap)
+    {
+        _sortMap = sortMap;
+    }
+    public void SetIncludeSettings(
+        Func<string, bool>? includeIsAllowed,
+        Func<IQueryable<T>, string?, IQueryable<T>>? includeApplier)
+    {
+        _includeIsAllowed = includeIsAllowed;
+        _includeApplier = includeApplier;
+    }
+    
 
     /// <summary>
     /// Execute search query with filters, sorting, and pagination
     /// </summary>
-    /// <typeparam name="TResult">Result DTO type after projection</typeparam>
-    /// <param name="source">Source IQueryable to query against</param>
-    /// <param name="qp">Search query parameters (filters, sort, pagination)</param>
-    /// <param name="selector">Projection expression to map entity to result DTO</param>
-    /// <param name="includeIsAllowed">Optional validator for allowed include paths</param>
-    /// <param name="includeApplier">Optional function to apply includes</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paginated search results</returns>
-    public async Task<PagedResult<TResult>> ExecuteAsync<TResult>(
-        IQueryable<T> source,
-        SearchQueryParams qp,
-        Expression<Func<T, TResult>> selector,
-        Func<string, bool>? includeIsAllowed = null,
-        Func<IQueryable<T>, string?, IQueryable<T>>? includeApplier = null,
-        CancellationToken ct = default)
+    public async Task ExecuteAsync(CancellationToken ct = default)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(qp);
-        ArgumentNullException.ThrowIfNull(selector);
+        ArgumentNullException.ThrowIfNull(_source);
+        ArgumentNullException.ThrowIfNull(_queryParams);
+        _selector ??= s => s;
 
         // Apply includes for eager loading
-        source = ApplyIncludes(source, qp.Includes, includeIsAllowed, includeApplier);
+        if (_includeIsAllowed is not null && _includeApplier is not null)
+        {
+            _source = ApplyIncludes(_source, _queryParams.Includes, _includeIsAllowed, _includeApplier);
+        }
 
-        // Apply filters
-        source = ApplyFilters(source, qp.Filters);
-
-        // Apply full-text search
-        source = ApplyFullTextSearch(source, qp.Q);
+        if (_queryParams?.Filters != null)
+        {
+            _source = ApplyFilters(_source, _queryParams.Filters);
+        }
+        
+        if (_queryParams?.Q != null)
+        {
+            _source = ApplyFullTextSearch(_source, _queryParams.Q);
+        }
 
         // Get total count before pagination
-        var totalCount = await source.CountAsync(ct);
+        var totalCount = await _source.CountAsync(ct);
 
         // Apply sorting
-        source = ApplySortWithDefault(source, qp.Sorts);
+        if (_queryParams?.Sorts != null)
+        {
+            _source = ApplySortWithDefault(_source, _queryParams.Sorts);
+        }
 
         // Apply pagination
-        var (page, pageSize) = NormalizePagination(qp.Page, qp.PageSize);
-        var items = await source
+        var (page, pageSize) = NormalizePagination(_queryParams.Page, _queryParams.PageSize);
+        var items = await _source
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(selector)
+            .Select(_selector)
             .ToListAsync(ct);
 
-        return new PagedResult<TResult>
+        _result = new PagedResult<T>
         {
             Items = items,
             TotalCount = totalCount,
