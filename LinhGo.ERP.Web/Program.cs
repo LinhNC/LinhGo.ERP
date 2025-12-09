@@ -57,7 +57,7 @@ builder.Services.AddAuthentication(options =>
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
     // Cookie settings - For Blazor Server auth state
-    options.Cookie.Name = "LinhGoERP.Auth";
+    options.Cookie.Name = "auth";
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     options.Cookie.SameSite = SameSiteMode.Lax;
@@ -86,8 +86,6 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero // No tolerance for expiration
     };
 });
-
-
 
 // Authorization
 builder.Services.AddAuthorization();

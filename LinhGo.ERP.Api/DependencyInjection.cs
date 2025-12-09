@@ -44,7 +44,7 @@ public static class DependencyInjection
         services.AddEndpointsApiExplorer();
         services.AddOpenApi(options =>
         {
-            options.AddOperationTransformer<SearchQueryParamsOperationTransformer>();
+            options.AddOperationTransformer<SearchQueryParamsTransformer>();
         });
 
         // Add HTTP Context Accessor for correlation ID access

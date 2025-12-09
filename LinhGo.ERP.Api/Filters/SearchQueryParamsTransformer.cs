@@ -7,7 +7,7 @@ namespace LinhGo.ERP.Api.Filters;
 /// <summary>
 /// OpenAPI operation transformer to replace SearchQueryParams with custom query parameter descriptions
 /// </summary>
-public class SearchQueryParamsOperationTransformer : IOpenApiOperationTransformer
+public class SearchQueryParamsTransformer : IOpenApiOperationTransformer
 {
     public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
     {
