@@ -1,0 +1,135 @@
+@using System.Globalization
+@inject NavigationManager Navigation
+
+<style>
+    .language-switcher-container {
+        position: relative;
+        display: inline-flex;
+    }
+    
+    .language-icon {
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0.25rem;
+        transition: transform 0.2s ease;
+        user-select: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .language-icon:hover {
+        transform: scale(1.15);
+    }
+    
+    .language-icon:active {
+        transform: scale(0.95);
+    }
+    
+    .language-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 0.5rem;
+        z-index: 1000;
+        min-width: 150px;
+    }
+    
+    .language-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: background-color 0.2s ease;
+        user-select: none;
+    }
+    
+    .language-option:hover {
+        background-color: #f3f4f6;
+    }
+    
+    .language-option.active {
+        background-color: #e5e7eb;
+    }
+    
+    .language-flag {
+        font-size: 1.25rem;
+    }
+    
+    .language-name {
+        font-size: 0.875rem;
+        color: #374151;
+    }
+</style>
+
+<div class="language-switcher-container">
+    <span class="language-icon" 
+          @onclick="ToggleDropdown" 
+          title="@GetTooltip()">
+        @GetCurrentFlag()
+    </span>
+    
+    @if (_showDropdown)
+    {
+        <div class="language-dropdown" @onclick:stopPropagation="true">
+            <div class="language-option @(_currentCulture == "en-US" ? "active" : "")"
+                 @onclick="@(() => ChangeLanguage("en-US"))">
+                <span class="language-flag">🇺🇸</span>
+                <span class="language-name">English</span>
+            </div>
+            <div class="language-option @(_currentCulture == "vi-VN" ? "active" : "")"
+                 @onclick="@(() => ChangeLanguage("vi-VN"))">
+                <span class="language-flag">🇻🇳</span>
+                <span class="language-name">Tiếng Việt</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string _currentCulture = "en-US";
+    private bool _showDropdown = false;
+
+    protected override void OnInitialized()
+    {
+        // Get current culture from cookie or default
+        var culture = CultureInfo.CurrentCulture.Name;
+        _currentCulture = culture == "vi-VN" ? "vi-VN" : "en-US";
+    }
+
+    private string GetCurrentFlag()
+    {
+        return _currentCulture == "vi-VN" ? "🇻🇳" : "🇺🇸";
+    }
+
+    private string GetTooltip()
+    {
+        return _currentCulture == "vi-VN" ? "Ngôn ngữ" : "Language";
+    }
+
+    private void ToggleDropdown()
+    {
+        _showDropdown = !_showDropdown;
+    }
+
+    private void ChangeLanguage(string culture)
+    {
+        if (culture != CultureInfo.CurrentCulture.Name)
+        {
+            var uri = new Uri(Navigation.Uri).GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+            var cultureEscaped = Uri.EscapeDataString(culture);
+            var uriEscaped = Uri.EscapeDataString(uri);
+            
+            // Use CultureController to set culture and redirect
+            Navigation.NavigateTo($"/Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}", forceLoad: true);
+        }
+    }
+}
+
+

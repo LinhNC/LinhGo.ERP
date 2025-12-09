@@ -1,0 +1,45 @@
+@page "/logout"
+@layout AuthLayout
+@inject NavigationManager Navigation
+@inject ILogger<Logout> Logger
+
+<PageTitle>Logging out...</PageTitle>
+
+<div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; gap: 1rem;">
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+    <p style="color: #64748b; font-size: 0.875rem;">Logging out...</p>
+</div>
+
+<!-- Auto-submit form for logout -->
+<form id="logoutForm" method="post" action="/account/logout" style="display: none;">
+    <AntiforgeryToken />
+    <button type="submit">Logout</button>
+</form>
+
+@code {
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                Logger.LogInformation("[Logout] Auto-submitting logout form");
+                // The form will be submitted via JavaScript after render
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "[Logout] Error during logout");
+                Navigation.NavigateTo("/login", forceLoad: true);
+            }
+        }
+    }
+}
+
+<script>
+    // Auto-submit the form after page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('[Logout] Submitting logout form');
+        document.getElementById('logoutForm').submit();
+    });
+</script>
+

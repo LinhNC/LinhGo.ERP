@@ -1,4 +1,5 @@
-﻿@using LinhGo.ERP.Web.Core.Models
+﻿@using LinhGo.ERP.Web.Components.Shared
+@using LinhGo.ERP.Web.Core.Models
 @using LinhGo.ERP.Web.Core.Interfaces
 @inherits LayoutComponentBase
 @inject NavigationManager UriHelper
@@ -9,24 +10,24 @@
 
 <RadzenComponents @rendermode=InteractiveAuto />
 
+<AuthorizedView>
 <RadzenLayout>
 <RadzenHeader class="rz-p-0">
     <ChildContent>
         <MainTopNav />
         <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" Gap="0px" class="demos-nav">
-            <RadzenColumn Size="5">
+            <RadzenColumn Size="5" SizeSM="5">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
                     <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
-                    <span style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Radzen Blazor Components</span>
+                    <span class="rz-display-none rz-display-sm-inline-flex" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Radzen Blazor Components</span>
+                    <span class="rz-display-inline-flex rz-display-sm-none" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">LinhGo ERP</span>
                 </RadzenStack>
             </RadzenColumn>
-            <RadzenColumn Size="7">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End">
-                    <div class="rz-display-none rz-display-sm-inline-flex align-items-center">
-                        <RadzenLink Path="/docs/api" Text="API Reference" title="Radzen Blazor Components API Reference" class="rz-mx-2 rz-mx-lg-4" target="_blank" />
-                        <RadzenLink Path="https://github.com/radzenhq/radzen-blazor" Text="GitHub" title="Star Radzen Blazor Components on GitHub" class="rz-text-nowrap rz-mx-2 rz-mx-lg-4" target="_blank" />
-                    </div>
-                    <RadzenAppearanceToggle class="rz-mx-2" />
+            <RadzenColumn Size="7" SizeSM="7">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <LanguageSwitcher />
+                    <RadzenAppearanceToggle class="rz-mx-1 rz-mx-sm-2" />
+                    <UserMenu />
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
@@ -107,3 +108,4 @@
         }
     }
 }
+</AuthorizedView>

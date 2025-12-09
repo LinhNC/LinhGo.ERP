@@ -1,0 +1,162 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject ILogger<AuthorizedView> Logger
+@implements IDisposable
+
+<CascadingAuthenticationState>
+    <AuthorizeView>
+        <Authorized>
+            @ChildContent
+        </Authorized>
+        <NotAuthorized>
+            @if (IsAuthPage())
+            {
+                @ChildContent
+            }
+            else
+            {
+                <Authorizing>
+                    <div class="authorization-loading">
+                        <RadzenProgressBarCircular ShowValue="false" 
+                                                 Mode="ProgressBarMode.Indeterminate" 
+                                                 Size="ProgressBarCircularSize.Large" />
+                        <p>Checking authentication...</p>
+                    </div>
+                </Authorizing>
+            }
+        </NotAuthorized>
+        <Authorizing>
+            <div class="authorization-loading">
+                <RadzenProgressBarCircular ShowValue="false" 
+                                         Mode="ProgressBarMode.Indeterminate" 
+                                         Size="ProgressBarCircularSize.Large" />
+                <p>Loading...</p>
+            </div>
+        </Authorizing>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+
+@code {
+    /// <summary>
+    /// Content to render when authorized or on authentication pages
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Logger.LogInformation("[AuthorizedView] Initializing authorization check");
+            
+            // Subscribe to authentication state changes
+            AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+            
+            // Check authentication state
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+            
+            Logger.LogInformation("[AuthorizedView] User authenticated: {IsAuthenticated}, Path: {Path}", 
+                isAuthenticated, GetCurrentRelativePath());
+            
+            // Redirect to login if not authenticated and not on auth page
+            if (!isAuthenticated && !IsAuthPage())
+            {
+                RedirectToLogin();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[AuthorizedView] Error during initialization");
+        }
+    }
+
+    /// <summary>
+    /// Handles authentication state changes and refreshes the UI
+    /// </summary>
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        Logger.LogInformation("[AuthorizedView] Authentication state changed");
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Checks if current page is an authentication-related page that doesn't require authorization
+    /// </summary>
+    private bool IsAuthPage()
+    {
+        var path = GetCurrentRelativePath().ToLowerInvariant();
+        
+        var authPages = new[]
+        {
+            "login",
+            "register",
+            "forgot-password",
+            "reset-password",
+            "access-denied",
+            "login-processing",
+            "test-localization" // Allow test pages
+        };
+        
+        return authPages.Any(authPage => path.StartsWith(authPage));
+    }
+
+    /// <summary>
+    /// Gets the current relative path from navigation URI
+    /// </summary>
+    private string GetCurrentRelativePath()
+    {
+        try
+        {
+            return Navigation.ToBaseRelativePath(Navigation.Uri);
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Redirects to login page with return URL preserved
+    /// </summary>
+    private void RedirectToLogin()
+    {
+        var currentPath = GetCurrentRelativePath();
+        var returnUrl = Uri.EscapeDataString(currentPath);
+        var loginUrl = string.IsNullOrWhiteSpace(currentPath) || currentPath == "/" 
+            ? "/login" 
+            : $"/login?returnUrl={returnUrl}";
+        
+        Logger.LogInformation("[AuthorizedView] Redirecting to: {LoginUrl}", loginUrl);
+        Navigation.NavigateTo(loginUrl, forceLoad: false);
+    }
+
+    /// <summary>
+    /// Cleanup subscriptions to prevent memory leaks
+    /// </summary>
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        Logger.LogDebug("[AuthorizedView] Disposed");
+    }
+}
+
+<style>
+    .authorization-loading {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        gap: 1rem;
+    }
+    
+    .authorization-loading p {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+</style>
+

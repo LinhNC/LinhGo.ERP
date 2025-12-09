@@ -1,0 +1,328 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject NotificationService NotificationService
+@inject ILogger<UserMenu> Logger
+
+<style>
+    .user-menu-container {
+        position: relative;
+    }
+    
+    .user-menu-trigger {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        user-select: none;
+    }
+    
+    .user-menu-trigger:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+    
+    .user-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1e293b;
+        line-height: 1.2;
+    }
+    
+    .user-email {
+        font-size: 0.75rem;
+        color: #64748b;
+        line-height: 1.2;
+    }
+    
+    .user-menu-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 0.5rem;
+        z-index: 1000;
+        min-width: 200px;
+    }
+    
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 0.75rem;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: background-color 0.2s ease;
+        user-select: none;
+        text-decoration: none;
+        color: #374151;
+    }
+    
+    .menu-item:hover {
+        background-color: #f3f4f6;
+    }
+    
+    .menu-item.danger:hover {
+        background-color: #fef2f2;
+        color: #dc2626;
+    }
+    
+    .menu-item-icon {
+        font-size: 1.25rem;
+        color: #6b7280;
+    }
+    
+    .menu-item.danger .menu-item-icon {
+        color: #dc2626;
+    }
+    
+    .menu-item-text {
+        font-size: 0.875rem;
+        flex: 1;
+    }
+    
+    .menu-divider {
+        height: 1px;
+        background-color: #e5e7eb;
+        margin: 0.5rem 0;
+    }
+    
+    @@media (max-width: 640px) {
+        .user-info {
+            display: none;
+        }
+    }
+</style>
+
+<div class="user-menu-container">
+    <div class="user-menu-trigger" @onclick="ToggleMenu">
+        <div class="user-avatar">
+            @GetUserInitials()
+        </div>
+        <div class="user-info">
+            <div class="user-name">@_userName</div>
+            <div class="user-email">@_userEmail</div>
+        </div>
+        <RadzenIcon Icon="@(_showMenu ? "expand_less" : "expand_more")" />
+    </div>
+    
+    @if (_showMenu)
+    {
+        <div class="user-menu-dropdown" @onclick:stopPropagation="true">
+            <div class="menu-item" @onclick="NavigateToProfile">
+                <RadzenIcon Icon="person" Class="menu-item-icon" />
+                <span class="menu-item-text">Profile</span>
+            </div>
+            
+            <div class="menu-item" @onclick="NavigateToSettings">
+                <RadzenIcon Icon="settings" Class="menu-item-icon" />
+                <span class="menu-item-text">Settings</span>
+            </div>
+            
+            <div class="menu-divider"></div>
+            
+            <div class="menu-item danger" @onclick="OnLogout">
+                <RadzenIcon Icon="logout" Class="menu-item-icon" />
+                <span class="menu-item-text">Logout</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string _userName = "User";
+    private string _userEmail = "user@example.com";
+    private bool _showMenu = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadUserInfoAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[UserMenu] Error loading user info");
+        }
+    }
+
+    /// <summary>
+    /// Loads current user information from authentication state
+    /// </summary>
+    private async Task LoadUserInfoAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user?.Identity?.IsAuthenticated ?? false)
+            {
+                // Get user email from claims
+                _userEmail = user.FindFirst(ClaimTypes.Email)?.Value 
+                    ?? user.FindFirst("email")?.Value 
+                    ?? "user@example.com";
+
+                // Get user name from claims
+                _userName = user.FindFirst(ClaimTypes.Name)?.Value 
+                    ?? user.FindFirst("name")?.Value 
+                    ?? user.FindFirst(ClaimTypes.GivenName)?.Value 
+                    ?? GetNameFromEmail(_userEmail);
+
+                Logger.LogInformation("[UserMenu] User loaded: {UserName} ({UserEmail})", _userName, _userEmail);
+            }
+            else
+            {
+                Logger.LogWarning("[UserMenu] User not authenticated");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[UserMenu] Error loading user information");
+            _userName = "User";
+            _userEmail = "user@example.com";
+        }
+    }
+
+    /// <summary>
+    /// Extracts name from email address (before @)
+    /// </summary>
+    private string GetNameFromEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return "User";
+
+        var atIndex = email.IndexOf('@');
+        if (atIndex > 0)
+        {
+            var name = email.Substring(0, atIndex);
+            // Capitalize first letter
+            return char.ToUpper(name[0]) + name.Substring(1);
+        }
+
+        return email;
+    }
+
+    /// <summary>
+    /// Gets user initials for avatar (first letter of name)
+    /// </summary>
+    private string GetUserInitials()
+    {
+        if (string.IsNullOrWhiteSpace(_userName))
+            return "U";
+
+        var parts = _userName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        
+        if (parts.Length >= 2)
+        {
+            // First letter of first name + first letter of last name
+            return $"{char.ToUpper(parts[0][0])}{char.ToUpper(parts[1][0])}";
+        }
+        else if (parts.Length == 1 && parts[0].Length > 0)
+        {
+            // First letter of name
+            return char.ToUpper(parts[0][0]).ToString();
+        }
+
+        return "U";
+    }
+
+    /// <summary>
+    /// Toggles the user menu dropdown
+    /// </summary>
+    private void ToggleMenu()
+    {
+        _showMenu = !_showMenu;
+    }
+
+    /// <summary>
+    /// Navigates to user profile page
+    /// </summary>
+    private void NavigateToProfile()
+    {
+        _showMenu = false;
+        Navigation.NavigateTo("/profile");
+        
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = "Coming Soon",
+            Detail = "Profile page is under development",
+            Duration = 3000
+        });
+    }
+
+    /// <summary>
+    /// Navigates to settings page
+    /// </summary>
+    private void NavigateToSettings()
+    {
+        _showMenu = false;
+        Navigation.NavigateTo("/settings");
+        
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = "Coming Soon",
+            Detail = "Settings page is under development",
+            Duration = 3000
+        });
+    }
+
+    /// <summary>
+    /// Handles user logout by navigating to the logout page
+    /// The logout page will submit a form POST to /account/logout with antiforgery token
+    /// The AccountController then clears cookies and redirects to /login
+    /// </summary>
+    private void OnLogout()
+    {
+        try
+        {
+            Logger.LogInformation("[UserMenu] User initiating logout");
+            _showMenu = false;
+            
+            // Navigate to logout page which handles the form POST with antiforgery token
+            // The logout page auto-submits to /account/logout endpoint
+            // AccountController clears cookies and redirects to /login
+            Navigation.NavigateTo("/logout", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[UserMenu] Error during logout navigation");
+            
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Logout Failed",
+                Detail = "An error occurred during logout. Please try again.",
+                Duration = 4000
+            });
+        }
+    }
+}
+

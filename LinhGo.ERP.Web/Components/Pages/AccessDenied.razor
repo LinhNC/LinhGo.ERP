@@ -1,0 +1,105 @@
+@page "/access-denied"
+@layout AuthLayout
+
+<PageTitle>Access Denied - LinhGo ERP</PageTitle>
+
+<style>
+    .auth-container {
+        min-height: 100vh;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .auth-card {
+        max-width: 500px;
+        width: 100%;
+        padding: 2rem;
+    }
+    
+    @@media (min-width: 768px) {
+        .auth-container {
+            padding: 2rem;
+        }
+        
+        .auth-card {
+            padding: 3rem;
+        }
+    }
+    
+    @@media (max-width: 767px) {
+        .auth-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<RadzenStack Class="auth-container">
+    <RadzenCard Class="auth-card rz-shadow-10">
+        <RadzenStack Gap="1.5rem" AlignItems="AlignItems.Center">
+            <!-- Icon -->
+            <RadzenIcon Icon="block" Style="font-size: 80px; color: var(--rz-danger);" />
+            
+            <!-- Title -->
+            <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-mb-0" Style="text-align: center;">
+                Access Denied
+            </RadzenText>
+            
+            <!-- Description -->
+            <RadzenText TextStyle="TextStyle.Body1" class="rz-color-secondary" Style="text-align: center;">
+                You don't have permission to access this page.
+            </RadzenText>
+            
+            <!-- Alert -->
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" Style="width: 100%;">
+                <RadzenText TextStyle="TextStyle.Body2">
+                    If you believe this is an error, please contact your system administrator.
+                </RadzenText>
+            </RadzenAlert>
+            
+            <!-- Actions -->
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="width: 100%;" JustifyContent="JustifyContent.Center" Wrap="FlexWrap.Wrap">
+                <RadzenButton Click="@GoBack" 
+                            Variant="Variant.Outlined" 
+                            Size="ButtonSize.Medium"
+                            Style="min-height: 44px;">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="arrow_back" />
+                        <span>Go Back</span>
+                    </RadzenStack>
+                </RadzenButton>
+                
+                <RadzenButton Click="@GoHome" 
+                            Size="ButtonSize.Medium"
+                            Style="min-height: 44px;">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="home" />
+                        <span>Go to Home</span>
+                    </RadzenStack>
+                </RadzenButton>
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+    
+    <!-- Footer -->
+    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary" Style="margin-top: 1.5rem; text-align: center; padding: 0 1rem;">
+        © 2025 LinhGo ERP. All rights reserved.
+    </RadzenText>
+</RadzenStack>
+
+@code {
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private void GoHome()
+    {
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}
+

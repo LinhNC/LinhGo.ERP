@@ -1,0 +1,14 @@
+@inherits LayoutComponentBase
+
+<RadzenComponents @rendermode=InteractiveAuto />
+
+<RadzenLayout Style="grid-template-columns: auto; grid-template-areas: 'rz-body';">
+    <RadzenBody>
+        @Body
+    </RadzenBody>
+</RadzenLayout>
+
+@code {
+    // Minimal layout without navigation for authentication pages
+}
+
