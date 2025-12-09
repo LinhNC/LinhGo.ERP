@@ -128,26 +128,26 @@
             <div class="user-name">@_userName</div>
             <div class="user-email">@_userEmail</div>
         </div>
-        <RadzenIcon Icon="@(_showMenu ? "expand_less" : "expand_more")" />
+        <i class="fas @(_showMenu ? "fa-chevron-up" : "fa-chevron-down")"></i>
     </div>
     
     @if (_showMenu)
     {
         <div class="user-menu-dropdown" @onclick:stopPropagation="true">
             <div class="menu-item" @onclick="NavigateToProfile">
-                <RadzenIcon Icon="person" Class="menu-item-icon" />
+                <i class="fas fa-user menu-item-icon"></i>
                 <span class="menu-item-text">Profile</span>
             </div>
             
             <div class="menu-item" @onclick="NavigateToSettings">
-                <RadzenIcon Icon="settings" Class="menu-item-icon" />
+                <i class="fas fa-cog menu-item-icon"></i>
                 <span class="menu-item-text">Settings</span>
             </div>
             
             <div class="menu-divider"></div>
             
             <div class="menu-item danger" @onclick="OnLogout">
-                <RadzenIcon Icon="logout" Class="menu-item-icon" />
+                <i class="fas fa-sign-out-alt menu-item-icon"></i>
                 <span class="menu-item-text">Logout</span>
             </div>
         </div>
