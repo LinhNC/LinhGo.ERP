@@ -20,6 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\LinhGo.ERP.Application\LinhGo.ERP.Application.csproj" />
       <ProjectReference Include="..\LinhGo.ERP.Domain\LinhGo.ERP.Domain.csproj" />
     </ItemGroup>
 

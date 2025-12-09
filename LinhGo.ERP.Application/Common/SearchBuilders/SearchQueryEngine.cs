@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Linq.Expressions;
+using LinhGo.ERP.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace LinhGo.ERP.Application.Common.SearchBuilders;

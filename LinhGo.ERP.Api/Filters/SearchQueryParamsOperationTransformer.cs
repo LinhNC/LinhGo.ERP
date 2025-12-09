@@ -1,4 +1,4 @@
-using LinhGo.ERP.Application.Common.SearchBuilders;
+using LinhGo.ERP.Domain.Common;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
@@ -30,11 +30,11 @@ public class SearchQueryParamsOperationTransformer : IOpenApiOperationTransforme
         // Remove the auto-generated SearchQueryParams parameters
         var parametersToRemove = operation.Parameters
             .Where(p => p.In == ParameterLocation.Query && 
-                       (p.Name.StartsWith("Filter", StringComparison.OrdinalIgnoreCase) || 
+                       (p.Name.StartsWith("Filters", StringComparison.OrdinalIgnoreCase) || 
                         p.Name.StartsWith("Fields", StringComparison.OrdinalIgnoreCase) || 
                         p.Name.Equals("Q", StringComparison.OrdinalIgnoreCase) || 
-                        p.Name.Equals("Sort", StringComparison.OrdinalIgnoreCase) || 
-                        p.Name.Equals("Include", StringComparison.OrdinalIgnoreCase) || 
+                        p.Name.Equals("Sorts", StringComparison.OrdinalIgnoreCase) || 
+                        p.Name.Equals("Includes", StringComparison.OrdinalIgnoreCase) || 
                         p.Name.Equals("Page", StringComparison.OrdinalIgnoreCase) || 
                         p.Name.Equals("PageSize", StringComparison.OrdinalIgnoreCase)))
             .ToList();

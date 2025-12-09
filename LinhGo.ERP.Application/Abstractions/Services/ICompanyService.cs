@@ -1,6 +1,7 @@
 ﻿﻿using LinhGo.ERP.Application.Common;
 using LinhGo.ERP.Application.Common.SearchBuilders;
 using LinhGo.ERP.Application.DTOs.Companies;
+using LinhGo.ERP.Domain.Common;
 using LinhGo.ERP.Domain.Companies.Entities;
 
 namespace LinhGo.ERP.Application.Abstractions.Services;

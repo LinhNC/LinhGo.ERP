@@ -1,3 +1,4 @@
+using LinhGo.ERP.Domain.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 

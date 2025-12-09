@@ -1,9 +1,8 @@
 ﻿using Asp.Versioning;
 using LinhGo.ERP.Api.Models;
 using LinhGo.ERP.Application.Abstractions.Services;
-using LinhGo.ERP.Application.Common;
+using LinhGo.ERP.Domain.Common;
 using LinhGo.ERP.Application.Common.Constants;
-using LinhGo.ERP.Application.Common.SearchBuilders;
 using LinhGo.ERP.Application.DTOs.Companies;
 using Microsoft.AspNetCore.Mvc;
 

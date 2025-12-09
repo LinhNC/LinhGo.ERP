@@ -1,6 +1,6 @@
 ﻿using LinhGo.ERP.Api.Models;
 using LinhGo.ERP.Api.Services;
-using LinhGo.ERP.Application.Common;
+using LinhGo.ERP.Domain.Common;
 using LinhGo.ERP.Application.Common.Localization;
 using Microsoft.AspNetCore.Mvc;
 

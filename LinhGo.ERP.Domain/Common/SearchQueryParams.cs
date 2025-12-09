@@ -1,4 +1,4 @@
-namespace LinhGo.ERP.Application.Common.SearchBuilders;
+namespace LinhGo.ERP.Domain.Common;
 
 public class SearchQueryParams
 {

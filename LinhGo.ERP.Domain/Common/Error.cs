@@ -1,4 +1,4 @@
-﻿namespace LinhGo.ERP.Application.Common;
+﻿namespace LinhGo.ERP.Domain.Common;
 
 /// <summary>
 /// Represents an error with a code, description, type, and parameters.

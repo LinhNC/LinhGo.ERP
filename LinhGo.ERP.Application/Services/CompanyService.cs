@@ -1,10 +1,8 @@
 ﻿using AutoMapper;
 using LinhGo.ERP.Application.Abstractions.Services;
-using LinhGo.ERP.Application.Common;
 using LinhGo.ERP.Application.Common.Errors;
-using LinhGo.ERP.Application.Common.SearchBuilders;
 using LinhGo.ERP.Application.DTOs.Companies;
-using LinhGo.ERP.Application.QueryData;
+using LinhGo.ERP.Domain.Common;
 using LinhGo.ERP.Domain.Companies.Entities;
 using LinhGo.ERP.Domain.Companies.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -180,13 +178,23 @@ public class CompanyService(
 
     public async Task<Result<PagedResult<CompanyDto>>> SearchAsync(SearchQueryParams queries, CancellationToken ctx)
     {
-        return new Result<PagedResult<CompanyDto>>();
-        // var source = companyRepository.SearchAsync()
-        // var searchEngine =
-        //     new SearchQueryEngine<Company>(CompanyQueries.FilterableFields, CompanyQueries.SortableFields);
-        //
-        // var result = searchEngine.ExecuteAsync();
-        //
-        // return result;
+        try
+        {
+            var result = await companyRepository.SearchAsync(queries, ctx);
+            var mappedResult = new PagedResult<CompanyDto>
+            {
+                Items = mapper.Map<IEnumerable<CompanyDto>>(result.Items),
+                TotalCount = result.TotalCount,
+                Page = result.Page,
+                PageSize = result.PageSize
+            };
+            
+            return mappedResult;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error searching companies");
+            return Error.WithFailureCode("CompanyErrors.SearchFailed");
+        }
     }
 }
