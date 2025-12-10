@@ -1,3 +1,4 @@
+using LinhGo.ERP.Application.Common.Constants;
 using LinhGo.ERP.Domain.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -11,7 +12,6 @@ namespace LinhGo.ERP.Application.Common.SearchBuilders;
 public class SearchQueryParamsBinder : IModelBinder
 {
     private const int MinFilterKeyLength = 8; // "filter[a]"
-    private const string FilterPrefix = "filter[";
     private const string DefaultOperator = "eq";
 
     public Task BindModelAsync(ModelBindingContext bindingContext)
@@ -20,12 +20,12 @@ public class SearchQueryParamsBinder : IModelBinder
         
         var searchParams = new SearchQueryParams
         {
-            Q = GetQueryValue(query, "q"),
-            Sorts = GetQueryValue(query, "sort"),
-            Includes = GetQueryValue(query, "include"),
-            Page = GetIntValue(query, "page", defaultValue: 1),
-            PageSize = GetIntValue(query, "pageSize", defaultValue: 20),
-            Fields = ParseAndSortFields(GetQueryValue(query, "fields"))
+            Q = GetQueryValue(query, SearchConstants.QuerySearchKey),
+            Sorts = GetQueryValue(query, SearchConstants.QuerySortKey),
+            Includes = GetQueryValue(query, SearchConstants.QueryIncludeKey),
+            Page = GetIntValue(query, SearchConstants.QueryPageKey, defaultValue: SearchConstants.DefaultPageNumber),
+            PageSize = GetIntValue(query, SearchConstants.QueryPageSizeKey, defaultValue: SearchConstants.DefaultPageSize),
+            Fields = ParseAndSortFields(GetQueryValue(query, SearchConstants.QueryFieldsKey))
         };
 
         // Parse and sort filter entries alphabetically
@@ -89,10 +89,10 @@ public class SearchQueryParamsBinder : IModelBinder
         field = string.Empty;
         op = DefaultOperator;
 
-        if (key.Length < MinFilterKeyLength || !key.AsSpan().StartsWith(FilterPrefix))
+        if (key.Length < MinFilterKeyLength || !key.AsSpan().StartsWith(SearchConstants.QueryFilterKeyPrefix))
             return false;
 
-        var span = key.AsSpan(FilterPrefix.Length);
+        var span = key.AsSpan(SearchConstants.QueryFilterKeyPrefix.Length);
         var closingBracketIndex = span.IndexOf(']');
         
         if (closingBracketIndex <= 0)

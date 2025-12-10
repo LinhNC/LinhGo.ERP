@@ -1,3 +1,4 @@
+using LinhGo.ERP.Application.Common.Constants;
 using LinhGo.ERP.Domain.Common;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
@@ -47,7 +48,7 @@ public class SearchQueryParamsTransformer : IOpenApiOperationTransformer
         // Add custom parameter descriptions with examples
         operation.Parameters.Add(new OpenApiParameter
         {
-            Name = "q",
+            Name = SearchConstants.QuerySearchKey,
             In = ParameterLocation.Query,
             Description = "General search term (searches across name, code, email, etc.)",
             Required = false,
@@ -70,7 +71,7 @@ public class SearchQueryParamsTransformer : IOpenApiOperationTransformer
 
         operation.Parameters.Add(new OpenApiParameter
         {
-            Name = "filter[fieldName]",
+            Name = "filter[fieldName][operator]",
             In = ParameterLocation.Query,
             Description = "**Dynamic field-based filtering** - Replace `[fieldName]` with actual field name from available fields below.\n\n" +
                          "### Format\n" +
@@ -111,7 +112,7 @@ public class SearchQueryParamsTransformer : IOpenApiOperationTransformer
 
         operation.Parameters.Add(new OpenApiParameter
         {
-            Name = "sort",
+            Name = SearchConstants.QuerySortKey,
             In = ParameterLocation.Query,
             Description = "**Multi-field sorting** with direction control.\n\n" +
                          "### Format\n" +
@@ -128,35 +129,33 @@ public class SearchQueryParamsTransformer : IOpenApiOperationTransformer
 
         operation.Parameters.Add(new OpenApiParameter
         {
-            Name = "page",
+            Name = SearchConstants.QueryPageKey,
             In = ParameterLocation.Query,
-            Description = "Page number for pagination (default: 1, min: 1, max: 50)",
+            Description = $"Page number for pagination (default: {SearchConstants.DefaultPageNumber})",
             Required = false,
             Schema = new OpenApiSchema 
             { 
-                Type = JsonSchemaType.Integer, 
-                Minimum = "1",
-                Maximum = "50",
+                Type = JsonSchemaType.Integer,
             },
         });
 
         operation.Parameters.Add(new OpenApiParameter
         {
-            Name = "pageSize",
+            Name = SearchConstants.QueryPageSizeKey,
             In = ParameterLocation.Query,
-            Description = "Number of items per page (default: 20, min: 1, max: 500)",
+            Description = $"Number items of each page (default: {SearchConstants.DefaultPageSize}, min: {SearchConstants.MinPageSize}, max: {SearchConstants.MaxPageSize})",
             Required = false,
             Schema = new OpenApiSchema 
             { 
                 Type = JsonSchemaType.Integer, 
-                Minimum = "1",
-                Maximum = "100", 
+                Minimum = SearchConstants.MinPageSize.ToString(),
+                Maximum = SearchConstants.MaxPageSize.ToString(),
             },
         });
 
         operation.Parameters.Add(new OpenApiParameter
         {
-            Name = "include",
+            Name = SearchConstants.QueryIncludeKey,
             In = ParameterLocation.Query,
             Description = "Related entities to include in response (comma-separated). Example: 'settings'",
             Required = false,
@@ -178,7 +177,7 @@ public class SearchQueryParamsTransformer : IOpenApiOperationTransformer
 
         operation.Parameters.Add(new OpenApiParameter
         {
-            Name = "fields",
+            Name = SearchConstants.QueryFieldsKey,
             In = ParameterLocation.Query,
             Description = "**Field selection** - Return only specific fields in response (comma-separated).\n\n" +
                          "Use this to reduce payload size by selecting only needed fields.\n\n" +

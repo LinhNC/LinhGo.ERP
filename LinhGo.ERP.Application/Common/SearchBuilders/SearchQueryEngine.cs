@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Linq.Expressions;
+using LinhGo.ERP.Application.Common.Constants;
 using LinhGo.ERP.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,9 +14,6 @@ namespace LinhGo.ERP.Application.Common.SearchBuilders;
 public sealed class SearchQueryEngine<T>
     where T : class
 {
-    private const int MinPageNumber = 1;
-    private const int MinPageSize = 1;
-    private const int MaxPageSize = 50;
     private const string DefaultSortField = "createdAt";
     private const string DefaultSearchField = "name";
 
@@ -175,8 +173,8 @@ public sealed class SearchQueryEngine<T>
     /// </summary>
     private static (int page, int pageSize) NormalizePagination(int page, int pageSize)
     {
-        var normalizedPage = Math.Max(MinPageNumber, page);
-        var normalizedPageSize = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
+        var normalizedPage = Math.Max(SearchConstants.DefaultPageNumber, page);
+        var normalizedPageSize = Math.Clamp(pageSize, SearchConstants.MinPageSize, SearchConstants.MaxPageSize);
         return (normalizedPage, normalizedPageSize);
     }
 
