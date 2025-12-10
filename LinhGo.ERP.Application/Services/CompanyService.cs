@@ -193,8 +193,8 @@ public class CompanyService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error searching companies");
-            return Error.WithFailureCode("CompanyErrors.SearchFailed");
+            logger.LogError(ex, "Error searching companies with queries {@Queries}", queries);
+            return Error.WithFailureCode(CompanyErrors.SearchFailed);
         }
     }
 }

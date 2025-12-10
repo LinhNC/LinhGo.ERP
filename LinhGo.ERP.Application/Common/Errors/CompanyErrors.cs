@@ -19,5 +19,6 @@ public static class CompanyErrors
     public const string DuplicateCode = "COMPANY_DUPLICATE_CODE";
     public const string IdMismatch = "COMPANY_ID_MISMATCH";
     public const string ConcurrencyConflict = "COMPANY_CONCURRENCY_CONFLICT";
+    public const string SearchFailed = "COMPANY_SEARCH_FAILED";
 }
 
