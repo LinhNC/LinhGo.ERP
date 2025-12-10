@@ -130,12 +130,13 @@ public class SearchQueryParamsTransformer : IOpenApiOperationTransformer
         {
             Name = "page",
             In = ParameterLocation.Query,
-            Description = "Page number for pagination (default: 1, min: 1)",
+            Description = "Page number for pagination (default: 1, min: 1, max: 50)",
             Required = false,
             Schema = new OpenApiSchema 
             { 
                 Type = JsonSchemaType.Integer, 
-                Minimum = "1"
+                Minimum = "1",
+                Maximum = "50",
             },
         });
 

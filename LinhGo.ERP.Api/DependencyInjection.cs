@@ -35,7 +35,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssemblyContaining(typeof(Application.AssemblyInformation));
         
         // Add CORS
-        services.AddCors();
+        services.AddCorsPolicy();
 
         // Add API Versioning
         services.AddApiVersioningWithExplorer();

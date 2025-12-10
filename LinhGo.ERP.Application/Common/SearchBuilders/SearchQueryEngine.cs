@@ -15,7 +15,7 @@ public sealed class SearchQueryEngine<T>
 {
     private const int MinPageNumber = 1;
     private const int MinPageSize = 1;
-    private const int MaxPageSize = 100;
+    private const int MaxPageSize = 50;
     private const string DefaultSortField = "createdAt";
     private const string DefaultSearchField = "name";
 

@@ -1,4 +1,4 @@
-﻿﻿using LinhGo.ERP.Application.Common;
+﻿using LinhGo.ERP.Application.Common;
 using LinhGo.ERP.Application.Common.SearchBuilders;
 using LinhGo.ERP.Application.DTOs.Companies;
 using LinhGo.ERP.Domain.Common;
@@ -8,6 +8,7 @@ namespace LinhGo.ERP.Application.Abstractions.Services;
 
 public interface ICompanyService
 {
+    // CRUD Operations
     Task<Result<CompanyDto>> GetByIdAsync(Guid id);
     Task<Result<IEnumerable<CompanyDto>>> GetAllAsync();
     Task<Result<IEnumerable<CompanyDto>>> GetActiveCompaniesAsync();

@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LinhGo.ERP.Application.Abstractions.Caching;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using LinhGo.ERP.Domain.Common;
 using LinhGo.ERP.Domain.Common.Interfaces;
 using LinhGo.ERP.Domain.Companies.Interfaces;
@@ -18,9 +20,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
-        var ss = configuration.GetConnectionString("DefaultConnection");
         // Database - PostgreSQL
         services.AddDbContext<ErpDbContext>(options =>
             options.UseNpgsql(
@@ -28,6 +30,9 @@ public static class DependencyInjection
                 b => b.MigrationsAssembly(typeof(ErpDbContext).Assembly.GetName().Name)
             )
         );
+
+        // Distributed Caching - Environment-specific configuration
+        AddCaching(services, configuration, environment);
 
         // Tenant Context (Scoped - per request)
         services.AddScoped<ITenantContext, TenantContext>();
@@ -48,6 +53,53 @@ public static class DependencyInjection
         services.AddScoped<IOrderRepository, OrderRepository>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Configure distributed caching based on environment
+    /// Development: In-Memory Cache (fast, simple, no external dependencies)
+    /// Staging/Production: Redis Cache (distributed, persistent, scalable)
+    /// </summary>
+    private static void AddCaching(
+        IServiceCollection services, 
+        IConfiguration configuration, 
+        IHostEnvironment environment)
+    {
+        if (environment.IsDevelopment())
+        {
+            // Development: Use in-memory distributed cache
+            // Benefits: No setup required, fast, good for local development
+            services.AddDistributedMemoryCache();
+            
+            Console.WriteLine("✓ Cache Configuration: In-Memory Cache (Development)");
+        }
+        else
+        {
+            // Production/Staging: Use Redis
+            // Benefits: Distributed, persistent, production-ready
+            var redisConnection = configuration.GetConnectionString("Redis");
+            
+            if (string.IsNullOrEmpty(redisConnection))
+            {
+                // Fallback to in-memory if Redis not configured
+                Console.WriteLine("⚠ Warning: Redis connection string not found. Falling back to in-memory cache.");
+                services.AddDistributedMemoryCache();
+            }
+            else
+            {
+                services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = redisConnection;
+                    options.InstanceName = configuration["Redis:InstanceName"];
+                });
+                
+                Console.WriteLine($"✓ Cache Configuration: Redis Cache ({environment.EnvironmentName})");
+                Console.WriteLine($"  Redis Instance: {configuration["Redis:InstanceName"] ?? "LinhGoERP:"}");
+            }
+        }
+        
+        // Register cache service (works with both in-memory and Redis)
+        services.AddSingleton<ICacheService, CacheService>();
     }
 }
 
