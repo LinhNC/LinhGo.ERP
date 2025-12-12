@@ -8,7 +8,7 @@ namespace LinhGo.SharedKernel.Cache;
 /// Distributed cache service implementation using IDistributedCache
 /// Supports Redis, or in-memory distributed cache
 /// </summary>
-public sealed class CacheService(IDistributedCache cache, ILogger<CacheService> logger) : ICacheService
+internal sealed class CacheService(IDistributedCache cache, ILogger<CacheService> logger) : ICacheService
 {
     private readonly IDistributedCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     private readonly ILogger<CacheService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

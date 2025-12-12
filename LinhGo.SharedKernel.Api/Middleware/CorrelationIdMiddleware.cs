@@ -10,7 +10,7 @@ namespace LinhGo.SharedKernel.Api.Middleware;
 /// Middleware to handle correlation IDs for request tracing
 /// Best Practice: Resolve scoped services from HttpContext.RequestServices
 /// </summary>
-public class CorrelationIdMiddleware
+internal class CorrelationIdMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<CorrelationIdMiddleware> _logger;

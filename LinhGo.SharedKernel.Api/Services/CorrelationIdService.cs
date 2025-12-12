@@ -5,7 +5,7 @@ namespace LinhGo.SharedKernel.Api.Services;
 /// <summary>
 /// Service interface for accessing correlation ID
 /// </summary>
-public interface ICorrelationIdService
+internal interface ICorrelationIdService
 {
     string GetOrCreateCorrelationId();
     string GetCorrelationId();
@@ -14,7 +14,7 @@ public interface ICorrelationIdService
 /// <summary>
 /// Service implementation for accessing correlation ID from HTTP context
 /// </summary>
-public class CorrelationIdService(IHttpContextAccessor httpContextAccessor) : ICorrelationIdService
+internal class CorrelationIdService(IHttpContextAccessor httpContextAccessor) : ICorrelationIdService
 {
     public string GetOrCreateCorrelationId()
     {

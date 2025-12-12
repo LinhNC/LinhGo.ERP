@@ -3,13 +3,13 @@ using LinhGo.SharedKernel.Api.Constants;
 
 namespace LinhGo.SharedKernel.Api.Services;
 
-public interface ILanguageCodeService
+internal interface ILanguageCodeService
 {
     string GetCurrentLanguageCode();
     string GetDefaultLanguageCode();
 }
 
-public class LanguageCodeService(IHttpContextAccessor httpContextAccessor) : ILanguageCodeService
+internal class LanguageCodeService(IHttpContextAccessor httpContextAccessor) : ILanguageCodeService
 {
     public string GetCurrentLanguageCode()
     {

@@ -5,7 +5,7 @@ namespace LinhGo.SharedKernel.Api.Extensions;
 /// <summary>
 /// Extension methods for configuring middleware
 /// </summary>
-public static class MiddlewareExtensions
+internal static class MiddlewareExtensions
 {
     /// <summary>
     /// Adds correlation ID middleware to the pipeline

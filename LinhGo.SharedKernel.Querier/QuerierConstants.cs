@@ -1,6 +1,6 @@
 namespace LinhGo.SharedKernel.Querier;
 
-public static class QuerierConstants
+internal static class QuerierConstants
 {
     public const int DefaultPageNumber = 1;
     public const int DefaultPageSize = 100;

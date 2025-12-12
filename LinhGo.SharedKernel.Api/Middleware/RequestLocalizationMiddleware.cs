@@ -9,7 +9,7 @@ namespace LinhGo.SharedKernel.Api.Middleware;
 /// Middleware to set the culture based on the Accept-Language header
 /// Best Practice: Resolve scoped services from HttpContext.RequestServices
 /// </summary>
-public class RequestLocalizationMiddleware
+internal class RequestLocalizationMiddleware
 {
     private readonly RequestDelegate _next;
 

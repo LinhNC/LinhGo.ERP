@@ -6,7 +6,7 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
 
 namespace LinhGo.SharedKernel.Api.Filters;
 
-public class ValidateModelResultFactory(
+internal class ValidateModelResultFactory(
     IResourceLocalizer localizer,
     ILanguageCodeService languageCodeService,
     ICorrelationIdService correlationIdService)

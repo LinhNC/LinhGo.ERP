@@ -1,6 +1,6 @@
 ﻿namespace LinhGo.ERP.Api.Extensions;
 
-public static class HttpRequestExtensions
+internal static class HttpRequestExtensions
 {
     public const string ForwardedProtoHeader = "X-Forwarded-Proto";
     public const string ForwardedHostHeader = "X-Forwarded-Host";

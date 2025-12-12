@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 
 namespace LinhGo.SharedKernel.Api.Extensions;
 
-public static class CorsExtensions
+internal static class CorsExtensions
 {
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services)
     {

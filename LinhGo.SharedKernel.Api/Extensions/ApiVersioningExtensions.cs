@@ -1,6 +1,6 @@
 ﻿namespace LinhGo.SharedKernel.Api.Extensions;
 
-public static class ApiVersioningExtensions
+internal static class ApiVersioningExtensions
 {
     public static IServiceCollection AddApiVersioningWithExplorer(this IServiceCollection services)
     {

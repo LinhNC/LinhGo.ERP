@@ -2,7 +2,7 @@
 
 namespace LinhGo.SharedKernel.Api.Configurations;
 
-public class ServiceConfigurations
+internal class ServiceConfigurations
 {
     [Required] 
     public ConnectionStrings ConnectionStrings { get; set; } = null!;
