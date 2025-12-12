@@ -1,4 +1,4 @@
-﻿namespace LinhGo.ERP.Api.Extensions;
+﻿namespace LinhGo.SharedKernel.Api.Extensions;
 
 public static class ApiVersioningExtensions
 {

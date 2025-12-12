@@ -1,12 +1,13 @@
-﻿using LinhGo.ERP.Application.Common.Constants;
+using LinhGo.SharedKernel.Api.Constants;
 
-namespace LinhGo.ERP.Api.Services;
+namespace LinhGo.SharedKernel.Api.Services;
 
 /// <summary>
 /// Service interface for accessing correlation ID
 /// </summary>
 public interface ICorrelationIdService
 {
+    string GetOrCreateCorrelationId();
     string GetCorrelationId();
 }
 
@@ -15,11 +16,17 @@ public interface ICorrelationIdService
 /// </summary>
 public class CorrelationIdService(IHttpContextAccessor httpContextAccessor) : ICorrelationIdService
 {
+    public string GetOrCreateCorrelationId()
+    {
+        var correlationId = GetCorrelationId();
+        return !string.IsNullOrEmpty(correlationId) ? correlationId : Guid.NewGuid().ToString();
+    }
+
     public string GetCorrelationId()
     {
         var context = httpContextAccessor.HttpContext;
         
-        if (context?.Items.TryGetValue(GeneralConstants.CorrelationIdHeaderName, out var correlationId) == true)
+        if (context?.Items.TryGetValue(ApiConstants.CorrelationIdHeaderName, out var correlationId) == true)
         {
             return correlationId?.ToString() ?? string.Empty;
         }
@@ -27,4 +34,3 @@ public class CorrelationIdService(IHttpContextAccessor httpContextAccessor) : IC
         return string.Empty;
     }
 }
-

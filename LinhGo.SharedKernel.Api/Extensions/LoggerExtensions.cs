@@ -2,7 +2,7 @@
 using Serilog.Core;
 using Serilog.Events;
 
-namespace LinhGo.ERP.Api.Extensions;
+namespace LinhGo.SharedKernel.Api.Extensions;
 
 public static class LoggerExtensions
 {

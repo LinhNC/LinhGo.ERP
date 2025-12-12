@@ -1,4 +1,4 @@
-﻿namespace LinhGo.ERP.Api.Configurations;
+﻿namespace LinhGo.SharedKernel.Api.Configurations;
 
 public class ConnectionStrings
 {

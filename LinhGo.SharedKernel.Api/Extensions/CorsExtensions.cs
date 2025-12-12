@@ -1,7 +1,7 @@
-﻿using LinhGo.ERP.Api.Configurations;
+﻿using LinhGo.SharedKernel.Api.Configurations;
 using Microsoft.Extensions.Options;
 
-namespace LinhGo.ERP.Api.Extensions;
+namespace LinhGo.SharedKernel.Api.Extensions;
 
 public static class CorsExtensions
 {

@@ -1,6 +1,6 @@
-﻿using LinhGo.ERP.Api.Middleware;
+﻿using LinhGo.SharedKernel.Api.Middleware;
 
-namespace LinhGo.ERP.Api.Extensions;
+namespace LinhGo.SharedKernel.Api.Extensions;
 
 /// <summary>
 /// Extension methods for configuring middleware

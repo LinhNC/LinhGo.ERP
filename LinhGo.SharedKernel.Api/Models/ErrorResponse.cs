@@ -1,4 +1,4 @@
-namespace LinhGo.ERP.Api.Models;
+namespace LinhGo.SharedKernel.Api.Models;
 
 /// <summary>
 /// Represents an API error response
@@ -40,4 +40,3 @@ public class ErrorDetail
     /// <example>Company with ID 42 not found</example>
     public required string Description { get; init; }
 }
-

@@ -1,11 +1,10 @@
-﻿using LinhGo.ERP.Api.Services;
-using LinhGo.ERP.Application.Common.Errors;
+﻿using LinhGo.SharedKernel.Api.Services;
 using LinhGo.SharedKernel.ResourceLocalizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
 
-namespace LinhGo.ERP.Api.Filters;
+namespace LinhGo.SharedKernel.Api.Filters;
 
 public class ValidateModelResultFactory(
     IResourceLocalizer localizer,
@@ -46,7 +45,7 @@ public class ValidateModelResultFactory(
     {
         if (string.IsNullOrEmpty(errorMessage))
         {
-            return localizer.GetMessage(GeneralErrors.ValidationFailed, languageCode);
+            return localizer.GetMessage("VALIDATE_FAILED", languageCode);
         }
 
         // Try to localize the message (in case it's an error code)

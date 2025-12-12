@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ASP.NET Core dependencies for HTTP context and filters -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    
+    <!-- Project references -->
+    <ProjectReference Include="..\LinhGo.ERP.Domain\LinhGo.ERP.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
+  </ItemGroup>
+
+</Project>
+

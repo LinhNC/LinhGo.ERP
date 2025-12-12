@@ -2,7 +2,7 @@
 using LinhGo.ERP.Application;
 using LinhGo.ERP.Infrastructure;
 using Serilog;
-using LoggerExtensions = LinhGo.ERP.Api.Extensions.LoggerExtensions;
+using LoggerExtensions = LinhGo.SharedKernel.Api.Extensions.LoggerExtensions;
 
 try
 {

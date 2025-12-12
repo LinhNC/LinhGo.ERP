@@ -1,10 +1,10 @@
-﻿using LinhGo.ERP.Api.Models;
-using LinhGo.ERP.Api.Services;
+﻿using LinhGo.SharedKernel.Api.Models;
+using LinhGo.SharedKernel.Api.Services;
 using LinhGo.SharedKernel.ResourceLocalizer;
 using LinhGo.SharedKernel.Result;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LinhGo.ERP.Api.Controllers;
+namespace LinhGo.SharedKernel.Api.Controllers;
 
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
@@ -13,16 +13,16 @@ public abstract class BaseApiController : ControllerBase
     /// <summary>
     /// Gets the error message localizer from DI container (lazy initialization)
     /// </summary>
-    protected IResourceLocalizer ResourceLocalizer =>
+    private IResourceLocalizer ResourceLocalizer =>
         field ??= HttpContext.RequestServices.GetRequiredService<IResourceLocalizer>();
 
     /// <summary>
     /// Gets the correlation ID service from DI container (lazy initialization)
     /// </summary>
-    protected ICorrelationIdService CorrelationIdService =>
+    private ICorrelationIdService CorrelationIdService =>
         field ??= HttpContext.RequestServices.GetRequiredService<ICorrelationIdService>();
     
-    protected ILanguageCodeService LanguageCodeService =>
+    private ILanguageCodeService LanguageCodeService =>
         field ??= HttpContext.RequestServices.GetRequiredService<ILanguageCodeService>();
     
 

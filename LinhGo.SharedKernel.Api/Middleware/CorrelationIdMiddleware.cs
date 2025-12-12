@@ -1,42 +1,57 @@
 ﻿using System.Diagnostics;
-using LinhGo.ERP.Application.Common.Constants;
+using LinhGo.SharedKernel.Api.Constants;
+using LinhGo.SharedKernel.Api.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-namespace LinhGo.ERP.Api.Middleware;
+namespace LinhGo.SharedKernel.Api.Middleware;
 
 /// <summary>
 /// Middleware to handle correlation IDs for request tracing
+/// Best Practice: Resolve scoped services from HttpContext.RequestServices
 /// </summary>
-public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
+public class CorrelationIdMiddleware
 {
+    private readonly RequestDelegate _next;
+    private readonly ILogger<CorrelationIdMiddleware> _logger;
+
+    public CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
     public async Task InvokeAsync(HttpContext context)
     {
-        var correlationId = GetOrCreateCorrelationId(context);
+        // Resolve scoped service from request scope
+        var correlationIdService = context.RequestServices.GetRequiredService<ICorrelationIdService>();
+        var correlationId = correlationIdService.GetOrCreateCorrelationId();
 
         // Add correlation ID to response headers
         context.Response.OnStarting(() =>
         {
-            if (!context.Response.Headers.ContainsKey(GeneralConstants.CorrelationIdHeaderName))
+            if (!context.Response.Headers.ContainsKey(ApiConstants.CorrelationIdHeaderName))
             {
-                context.Response.Headers.Append(GeneralConstants.CorrelationIdHeaderName, correlationId);
+                context.Response.Headers[ApiConstants.CorrelationIdHeaderName] = correlationId;
             }
             return Task.CompletedTask;
         });
 
         // Add correlation ID to HttpContext items for easy access
-        context.Items[GeneralConstants.CorrelationIdHeaderName] = correlationId;
+        context.Items[ApiConstants.CorrelationIdHeaderName] = correlationId;
 
         // Add to Activity for distributed tracing
         Activity.Current?.SetTag("correlation_id", correlationId);
 
         // Log the correlation ID
-        using (logger.BeginScope(new Dictionary<string, object>
+        using (_logger.BeginScope(new Dictionary<string, object>
         {
             ["CorrelationId"] = correlationId,
             ["RequestPath"] = context.Request.Path,
             ["RequestMethod"] = context.Request.Method
         }))
         {
-            logger.LogInformation(
+            _logger.LogInformation(
                 "Request started: {Method} {Path} [CorrelationId: {CorrelationId}]",
                 context.Request.Method,
                 context.Request.Path,
@@ -44,11 +59,11 @@ public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationId
 
             try
             {
-                await next(context);
+                await _next(context);
             }
             finally
             {
-                logger.LogInformation(
+                _logger.LogInformation(
                     "Request completed: {Method} {Path} [CorrelationId: {CorrelationId}] - Status: {StatusCode}",
                     context.Request.Method,
                     context.Request.Path,
@@ -56,19 +71,6 @@ public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationId
                     context.Response.StatusCode);
             }
         }
-    }
-
-    private static string GetOrCreateCorrelationId(HttpContext context)
-    {
-        // Try to get correlation ID from request header
-        if (context.Request.Headers.TryGetValue(GeneralConstants.CorrelationIdHeaderName, out var correlationId)
-            && !string.IsNullOrWhiteSpace(correlationId))
-        {
-            return correlationId.ToString();
-        }
-
-        // Generate new correlation ID if not provided
-        return Guid.NewGuid().ToString();
     }
 }
 
