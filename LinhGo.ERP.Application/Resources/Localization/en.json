@@ -25,6 +25,18 @@
   "USER_PASSWORD_REQUIRED": "Password is required",
   "USER_PASSWORD_TOO_SHORT": "Password must be at least {0} characters",
   
+  "AUTH_INVALID_CREDENTIALS": "Invalid email/username or password",
+  "AUTH_USER_NOT_FOUND": "User not found",
+  "AUTH_INVALID_PASSWORD": "Invalid password",
+  "AUTH_ACCOUNT_INACTIVE": "Account is inactive",
+  "AUTH_FAILED": "Authentication failed",
+  "AUTH_INVALID_ACCESS_TOKEN": "Invalid access token",
+  "AUTH_INVALID_REFRESH_TOKEN": "Invalid refresh token",
+  "AUTH_REFRESH_TOKEN_EXPIRED": "Refresh token expired",
+  "AUTH_INVALID_TOKEN_CLAIMS": "Invalid token claims",
+  "AUTH_TOKEN_REFRESH_FAILED": "Token refresh failed",
+  "AUTH_LOGOUT_FAILED": "Logout failed",
+  
   "CUSTOMER_NOTFOUND": "Customer with ID {0} not found",
   "CUSTOMER_CREATE_FAILED": "Failed to create customer",
   "CUSTOMER_UPDATE_FAILED": "Failed to update customer",

@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Radzen.Blazor" Version="8.3.9" />
+      <PackageReference Include="Radzen.Blazor" Version="8.4.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
     </ItemGroup>
@@ -20,6 +20,11 @@
       <Folder Include="Modules\Inventory\Models\" />
       <Folder Include="Modules\Inventory\Services\" />
       <Folder Include="wwwroot\js\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LinhGo.ERP.Authorization\LinhGo.ERP.Authorization.csproj" />
+      <ProjectReference Include="..\LinhGo.ERP.Infrastructure\LinhGo.ERP.Infrastructure.csproj" />
     </ItemGroup>
 
    

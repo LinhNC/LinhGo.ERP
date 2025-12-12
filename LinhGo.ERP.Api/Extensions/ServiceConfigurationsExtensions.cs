@@ -16,7 +16,7 @@ public static class ServiceConfigurationsExtensions
             return services;
         }
 
-        private IServiceCollection AddAndValidateSingleton<TOptions>(IConfiguration configuration)
+        public IServiceCollection AddAndValidateSingleton<TOptions>(IConfiguration configuration)
             where TOptions : class, new()
         {
             services

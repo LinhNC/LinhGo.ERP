@@ -1,9 +1,10 @@
 ﻿using Asp.Versioning;
 using LinhGo.ERP.Api.Models;
 using LinhGo.ERP.Application.Abstractions.Services;
-using LinhGo.ERP.Domain.Common;
 using LinhGo.ERP.Application.Common.Constants;
 using LinhGo.ERP.Application.DTOs.Companies;
+using LinhGo.SharedKernel.Querier;
+using LinhGo.SharedKernel.Result;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinhGo.ERP.Api.Controllers.V1;
@@ -15,7 +16,7 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     /// <summary>
     /// Search and filter companies with advanced query capabilities
     /// </summary>
-    [Attributes.SearchableFields(
+    [QuerierFieldsAttribute(
         entityName: "Companies",
         filterFields: ["name", "code", "currency", "country", "industry", "city", "state", "isActive", "subscriptionPlan", "email", "phone", "taxId", "createdAt", "updatedAt"
         ],
@@ -26,9 +27,9 @@ public class CompaniesController(ICompanyService companyService) : BaseApiContro
     [ProducesResponseType(typeof(PagedResult<CompanyDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Search([FromQuery] SearchQueryParams queries, CancellationToken ctx)
+    public async Task<IActionResult> Search([FromQuery] QuerierParams queries, CancellationToken ctx)
     {
-        var result = await companyService.SearchAsync(queries, ctx);
+        var result = await companyService.QueryAsync(queries, ctx);
         return ToResponse(result);
     }
 

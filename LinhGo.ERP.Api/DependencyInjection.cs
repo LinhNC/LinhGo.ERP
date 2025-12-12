@@ -2,8 +2,9 @@
 using LinhGo.ERP.Api.Extensions;
 using LinhGo.ERP.Api.Filters;
 using LinhGo.ERP.Api.Services;
-using LinhGo.ERP.Application.Common.SearchBuilders;
+using LinhGo.ERP.Authorization.Extensions;
 using LinhGo.ERP.Infrastructure.Data;
+using LinhGo.SharedKernel.Querier;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
@@ -17,7 +18,7 @@ public static class DependencyInjection
         // Add services to the container.
         services.AddControllers(options =>
             {
-                options.ModelBinderProviders.Insert(0, new SearchQueryParamsBinderProvider());
+                options.ModelBinderProviders.Insert(0, new QuerierParamsBinderProvider());
             })
         .ConfigureApiBehaviorOptions(options =>
         {
@@ -26,6 +27,9 @@ public static class DependencyInjection
         });
 
         services.AddConfigurations(configuration);
+        
+        // Add complete Authentication & Authorization from Authorization project
+        services.AddAuthenticationAndAuthorization(configuration);
         
         services.AddFluentValidationAutoValidation(cfg =>
         {
@@ -44,7 +48,7 @@ public static class DependencyInjection
         services.AddEndpointsApiExplorer();
         services.AddOpenApi(options =>
         {
-            options.AddOperationTransformer<SearchQueryParamsTransformer>();
+            options.AddOperationTransformer<QuerierParamsOpenApiTransformer>();
         });
 
         // Add HTTP Context Accessor for correlation ID access
@@ -81,6 +85,9 @@ public static class DependencyInjection
 
             app.UseHttpsRedirection();
             app.UseCors("CorsPolicy");
+            
+            // Authentication must come before Authorization
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
         

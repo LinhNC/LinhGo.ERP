@@ -18,6 +18,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\LinhGo.ERP.Domain\LinhGo.ERP.Domain.csproj" />
+      <ProjectReference Include="..\LinhGo.SharedKernel.Cache\LinhGo.SharedKernel.Cache.csproj" />
+      <ProjectReference Include="..\LinhGo.SharedKernel.ResourceLocalizer\LinhGo.SharedKernel.ResourceLocalizer.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -25,6 +27,10 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="DTOs\Auth\" />
     </ItemGroup>
 
 </Project>

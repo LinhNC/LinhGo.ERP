@@ -1,6 +1,6 @@
 ﻿using LinhGo.ERP.Api.Services;
 using LinhGo.ERP.Application.Common.Errors;
-using LinhGo.ERP.Application.Common.Localization;
+using LinhGo.SharedKernel.ResourceLocalizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;

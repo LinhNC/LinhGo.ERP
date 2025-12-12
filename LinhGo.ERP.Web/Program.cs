@@ -1,15 +1,12 @@
 using System.Globalization;
-using System.Text;
+using LinhGo.ERP.Authorization.Extensions;
 using LinhGo.ERP.Web.Components;
-using LinhGo.ERP.Web.Configuration;
 using LinhGo.ERP.Web.Core.Interfaces;
 using LinhGo.ERP.Web.Core.Services;
 using LinhGo.ERP.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.IdentityModel.Tokens;
 using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,16 +35,21 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider());
 });
 
-// Configure JWT Settings
-var jwtSettings = new JwtSettings();
-builder.Configuration.GetSection(JwtSettings.SectionName).Bind(jwtSettings);
-jwtSettings.Validate();
-builder.Services.AddSingleton(jwtSettings);
+// Add Authentication & Authorization from Authorization project
+builder.Services.AddAuthenticationAndAuthorization(builder.Configuration);
 
-// Register Token Service
-builder.Services.AddScoped<ITokenService, TokenService>();
+// Register Web Authentication Service (calls API)
+builder.Services.AddScoped<IWebAuthenticationService, WebAuthenticationService>();
 
-// Configure Authentication with JWT Bearer + Cookie (Best Practice: Dual Authentication)
+// Configure HttpClient for API calls
+builder.Services.AddHttpClient("API", client =>
+{
+    var apiUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:5001";
+    client.BaseAddress = new Uri(apiUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// Configure Cookie Authentication for Blazor Server
 builder.Services.AddAuthentication(options =>
 {
     // Default scheme is Cookie for Blazor Server components
@@ -63,32 +65,14 @@ builder.Services.AddAuthentication(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.MaxAge = TimeSpan.FromDays(30);
     
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(jwtSettings.AccessTokenExpirationMinutes);
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(15); // Match JWT settings
     options.SlidingExpiration = true;
     
     options.LoginPath = "/login";
     options.LogoutPath = "/logout";
     options.AccessDeniedPath = "/access-denied";
     options.ReturnUrlParameter = "returnUrl";
-})
-.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-{
-    // JWT Bearer settings - For API authentication
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.Issuer,
-        ValidAudience = jwtSettings.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
-        ClockSkew = TimeSpan.Zero // No tolerance for expiration
-    };
 });
-
-// Authorization
-builder.Services.AddAuthorization();
 
 // Custom Authentication State Provider (Best Practice)
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();

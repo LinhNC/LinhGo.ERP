@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using LinhGo.ERP.Domain.Users.Entities;
 using LinhGo.ERP.Domain.Users.Interfaces;
 using LinhGo.ERP.Infrastructure.Data;
+using LinhGo.SharedKernel.Querier;
+using LinhGo.SharedKernel.Result;
 
 namespace LinhGo.ERP.Infrastructure.Repositories;
 
@@ -114,5 +117,64 @@ public class UserCompanyRepository(ErpDbContext context)
             await Context.SaveChangesAsync(cancellationToken);
         }
     }
+
+    public async Task<PagedResult<UserCompany>> QueryAsync(QuerierParams queries, CancellationToken cancellationToken = default)
+    {
+        // Use AsNoTracking for read-only queries - improves performance
+        var baseQuery = DbSet
+            .AsNoTracking()
+            .Include(uc => uc.User)
+            .Include(uc => uc.Company);
+        
+        Expression<Func<UserCompany, UserCompany>> identitySelector = uc => uc;
+
+        var searchBuilder = new QuerierBuilder<UserCompany>()
+            .WithSource(baseQuery)
+            .WithQueryParams(queries)
+            .WithSelector(identitySelector)
+            .WithFilterMappingFields(FilterableFields)
+            .WithSortMappingFields(SortableFields);
+
+        var result = await searchBuilder.BuildAsync(cancellationToken);
+        return result;
+    }
+
+    #region Querier Configuration
+
+    /// <summary>
+    /// Defines fields that can be filtered
+    /// Example: ?filter[userId]=guid&filter[isActive]=true
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, Expression<Func<UserCompany, object>>> FilterableFields =
+        new Dictionary<string, Expression<Func<UserCompany, object>>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["userId"] = x => x.UserId,
+            ["companyId"] = x => x.CompanyId,
+            ["role"] = x => x.Role,
+            ["isActive"] = x => x.IsActive,
+            ["isDefaultCompany"] = x => x.IsDefaultCompany,
+            ["joinedAt"] = x => x.JoinedAt,
+            ["leftAt"] = x => x.LeftAt,
+            ["createdAt"] = x => x.CreatedAt
+        };
+
+    /// <summary>
+    /// Defines fields that can be sorted
+    /// Example: ?sort=-joinedAt,role
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, LambdaExpression> SortableFields =
+        new Dictionary<string, LambdaExpression>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["userId"] = (Expression<Func<UserCompany, object>>)(x => x.UserId),
+            ["companyId"] = (Expression<Func<UserCompany, object>>)(x => x.CompanyId),
+            ["role"] = (Expression<Func<UserCompany, object>>)(x => x.Role),
+            ["isActive"] = (Expression<Func<UserCompany, object>>)(x => x.IsActive),
+            ["isDefaultCompany"] = (Expression<Func<UserCompany, object>>)(x => x.IsDefaultCompany),
+            ["joinedAt"] = (Expression<Func<UserCompany, object>>)(x => x.JoinedAt),
+            ["leftAt"] = (Expression<Func<UserCompany, object>>)(x => x.LeftAt),
+            ["createdAt"] = (Expression<Func<UserCompany, object>>)(x => x.CreatedAt)
+        };
+
+    #endregion
 }
 

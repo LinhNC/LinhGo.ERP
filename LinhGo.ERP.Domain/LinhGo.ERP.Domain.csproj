@@ -11,4 +11,9 @@
       <Folder Include="Users\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LinhGo.SharedKernel.Querier\LinhGo.SharedKernel.Querier.csproj" />
+      <ProjectReference Include="..\LinhGo.SharedKernel.Result\LinhGo.SharedKernel.Result.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
-using LinhGo.ERP.Application.Abstractions.Caching;
 using LinhGo.ERP.Application.Abstractions.Services;
 using LinhGo.ERP.Application.Common.Caching;
 using LinhGo.ERP.Application.Common.Errors;
 using LinhGo.ERP.Application.DTOs.Companies;
-using LinhGo.ERP.Domain.Common;
 using LinhGo.ERP.Domain.Companies.Entities;
 using LinhGo.ERP.Domain.Companies.Interfaces;
+using LinhGo.SharedKernel.Cache;
+using LinhGo.SharedKernel.Querier;
+using LinhGo.SharedKernel.Result;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -35,7 +36,7 @@ public class CompanyService(
         try
         {
             // Try to get from cache first
-            var cacheKey = CacheKeyFactory.Company.ById(id);
+            var cacheKey = CacheKeys.Company.ById(id);
             var cachedCompany = await cacheService.GetAsync<CompanyDto>(cacheKey);
             
             if (cachedCompany != null)
@@ -74,7 +75,7 @@ public class CompanyService(
         try
         {
             // Try to get from cache first
-            var cacheKey = CacheKeyFactory.Company.All();
+            var cacheKey = CacheKeys.Company.All();
             var cachedCompanies = await cacheService.GetAsync<List<CompanyDto>>(cacheKey);
             
             if (cachedCompanies != null)
@@ -108,7 +109,7 @@ public class CompanyService(
         try
         {
             // Try to get from cache first
-            var cacheKey = CacheKeyFactory.Company.Active();
+            var cacheKey = CacheKeys.Company.Active();
             var cachedCompanies = await cacheService.GetAsync<List<CompanyDto>>(cacheKey);
             
             if (cachedCompanies != null)
@@ -142,7 +143,7 @@ public class CompanyService(
         try
         {
             // Try to get from cache first
-            var cacheKey = CacheKeyFactory.Company.ByCode(code);
+            var cacheKey = CacheKeys.Company.ByCode(code);
             var cachedCompany = await cacheService.GetAsync<CompanyDto>(cacheKey);
             
             if (cachedCompany != null)
@@ -291,28 +292,28 @@ public class CompanyService(
     }
 
     /// <summary>
-    /// Search companies with hash-based caching
+    /// Query companies with hash-based caching
     /// Cache Strategy: Hash query parameters to generate unique cache key
     /// Each unique combination of filters/sorts/pagination gets its own cache entry
     /// </summary>
-    public async Task<Result<PagedResult<CompanyDto>>> SearchAsync(SearchQueryParams queries, CancellationToken ctx)
+    public async Task<Result<PagedResult<CompanyDto>>> QueryAsync(QuerierParams queries, CancellationToken ctx)
     {
         try
         {
             // Generate cache key based on query hash
-            var cacheKey = CacheKeyFactory.Company.Search(queries);
+            var cacheKey = CacheKeys.Company.Queries(queries);
             
             // Try to get from cache first
             var cachedResult = await cacheService.GetAsync<PagedResult<CompanyDto>>(cacheKey, ctx);
             
             if (cachedResult != null)
             {
-                logger.LogDebug("Retrieved company search results from cache. Key: {CacheKey}", cacheKey);
+                logger.LogDebug("Retrieved company query results from cache. Key: {CacheKey}", cacheKey);
                 return cachedResult;
             }
 
             // Cache miss - execute search query
-            var result = await companyRepository.SearchAsync(queries, ctx);
+            var result = await companyRepository.QueryAsync(queries, ctx);
             var mappedResult = new PagedResult<CompanyDto>
             {
                 Items = mapper.Map<IEnumerable<CompanyDto>>(result.Items),
@@ -323,14 +324,14 @@ public class CompanyService(
             
             // Cache the search result with short expiration (search data changes frequently)
             await cacheService.SetAsync(cacheKey, mappedResult, ShortCacheExpiration, ctx);
-            logger.LogDebug("Cached company search results. Key: {CacheKey}", cacheKey);
+            logger.LogDebug("Cached company query results. Key: {CacheKey}", cacheKey);
             
             return mappedResult;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error searching companies with queries {@Queries}", queries);
-            return Error.WithFailureCode(CompanyErrors.SearchFailed);
+            logger.LogError(ex, "Error querying companies with queries {@Queries}", queries);
+            return Error.WithFailureCode(CompanyErrors.QueryFailed);
         }
     }
 
@@ -343,8 +344,8 @@ public class CompanyService(
     private async Task InvalidateCompanyCachesAsync(Guid id, string code)
     {
         // Remove individual company caches
-        await cacheService.RemoveAsync(CacheKeyFactory.Company.ById(id));
-        await cacheService.RemoveAsync(CacheKeyFactory.Company.ByCode(code));
+        await cacheService.RemoveAsync(CacheKeys.Company.ById(id));
+        await cacheService.RemoveAsync(CacheKeys.Company.ByCode(code));
         
         // Invalidate list caches as they contain this company
         await InvalidateListCachesAsync();
@@ -356,12 +357,12 @@ public class CompanyService(
     /// </summary>
     private async Task InvalidateListCachesAsync()
     {
-        await cacheService.RemoveAsync(CacheKeyFactory.Company.All());
-        await cacheService.RemoveAsync(CacheKeyFactory.Company.Active());
+        await cacheService.RemoveAsync(CacheKeys.Company.All());
+        await cacheService.RemoveAsync(CacheKeys.Company.Active());
         
         // Invalidate all search result caches (pattern-based removal)
         // This clears all cached search queries since data has changed
-        await cacheService.RemoveByPatternAsync(CacheKeyFactory.Company.PatternSearch());
+        await cacheService.RemoveByPatternAsync(CacheKeys.Company.PatternSearch());
         
         logger.LogDebug("Invalidated all company list and search caches");
     }

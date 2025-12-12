@@ -3,8 +3,8 @@ using LinhGo.ERP.Domain.Companies.Entities;
 using LinhGo.ERP.Domain.Companies.Interfaces;
 using LinhGo.ERP.Infrastructure.Data;
 using System.Linq.Expressions;
-using LinhGo.ERP.Application.Common.SearchBuilders;
-using LinhGo.ERP.Domain.Common;
+using LinhGo.SharedKernel.Querier;
+using LinhGo.SharedKernel.Result;
 
 namespace LinhGo.ERP.Infrastructure.Repositories;
 
@@ -35,28 +35,28 @@ public class CompanyRepository(ErpDbContext context) : GenericRepository<Company
     }
 
     /// <summary>
-    /// Searches companies with filtering, sorting, and pagination
+    /// Query companies with filtering, sorting, and pagination
     /// Performance optimizations: AsNoTracking, no unnecessary projections at this level
     /// </summary>
-    public async Task<PagedResult<Company>> SearchAsync(SearchQueryParams queries, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<Company>> QueryAsync(QuerierParams queries, CancellationToken cancellationToken = default)
     {
         // Use AsNoTracking for read-only queries - significantly improves performance
         // by avoiding the overhead of change tracking for read-only operations
         var baseQuery = DbSet.AsNoTracking();
         Expression<Func<Company, Company>> identitySelector = c => c;
 
-        var searchBuilder = new SearchBuilder<Company>()
+        var searchBuilder = new QuerierBuilder<Company>()
             .WithSource(baseQuery)
             .WithQueryParams(queries)
             .WithSelector(identitySelector)
-            .WithFilterMapping(FilterableFields)
-            .WithSortMapping(SortableFields);
+            .WithFilterMappingFields(FilterableFields)
+            .WithSortMappingFields(SortableFields);
 
         var result = await searchBuilder.BuildAsync(cancellationToken);
         return result;
     }
     
-    #region Search Configuration
+    #region Querier Configuration
     
     /// <summary>
     /// Defines fields that can be filtered using query parameters

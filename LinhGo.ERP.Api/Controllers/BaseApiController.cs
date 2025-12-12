@@ -1,7 +1,7 @@
 ﻿using LinhGo.ERP.Api.Models;
 using LinhGo.ERP.Api.Services;
-using LinhGo.ERP.Domain.Common;
-using LinhGo.ERP.Application.Common.Localization;
+using LinhGo.SharedKernel.ResourceLocalizer;
+using LinhGo.SharedKernel.Result;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinhGo.ERP.Api.Controllers;
@@ -60,6 +60,8 @@ public abstract class BaseApiController : ControllerBase
             ErrorType.Validation => BadRequest(errorResponse),
             ErrorType.Conflict => Conflict(errorResponse),
             ErrorType.Failure => BadRequest(errorResponse),
+            ErrorType.Unauthorized => Unauthorized(errorResponse),
+            ErrorType.NoPermission => StatusCode(StatusCodes.Status403Forbidden, errorResponse),
             _ => StatusCode(StatusCodes.Status500InternalServerError, errorResponse)
         };
 

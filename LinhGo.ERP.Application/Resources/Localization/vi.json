@@ -25,6 +25,18 @@
   "USER_PASSWORD_REQUIRED": "Mật khẩu là bắt buộc",
   "USER_PASSWORD_TOO_SHORT": "Mật khẩu phải có ít nhất {0} ký tự",
   
+  "AUTH_INVALID_CREDENTIALS": "Email/tên đăng nhập hoặc mật khẩu không hợp lệ",
+  "AUTH_USER_NOT_FOUND": "Không tìm thấy người dùng",
+  "AUTH_INVALID_PASSWORD": "Mật khẩu không hợp lệ",
+  "AUTH_ACCOUNT_INACTIVE": "Tài khoản đã bị vô hiệu hóa",
+  "AUTH_FAILED": "Xác thực thất bại",
+  "AUTH_INVALID_ACCESS_TOKEN": "Access token không hợp lệ",
+  "AUTH_INVALID_REFRESH_TOKEN": "Refresh token không hợp lệ",
+  "AUTH_REFRESH_TOKEN_EXPIRED": "Refresh token đã hết hạn",
+  "AUTH_INVALID_TOKEN_CLAIMS": "Thông tin token không hợp lệ",
+  "AUTH_TOKEN_REFRESH_FAILED": "Làm mới token thất bại",
+  "AUTH_LOGOUT_FAILED": "Đăng xuất thất bại",
+  
   "CUSTOMER_NOTFOUND": "Không tìm thấy khách hàng với ID {0}",
   "CUSTOMER_CREATE_FAILED": "Tạo khách hàng thất bại",
   "CUSTOMER_UPDATE_FAILED": "Cập nhật khách hàng thất bại",
