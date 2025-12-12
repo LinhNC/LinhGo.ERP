@@ -37,6 +37,16 @@
   "AUTH_TOKEN_REFRESH_FAILED": "Làm mới token thất bại",
   "AUTH_LOGOUT_FAILED": "Đăng xuất thất bại",
   
+  "AUDITLOG_NOTFOUND": "Không tìm thấy nhật ký kiểm toán với ID {0}",
+  "AUDITLOG_GET_ID_FAILED": "Lỗi khi truy xuất nhật ký kiểm toán theo ID",
+  "AUDITLOG_GET_PAGED_FAILED": "Lỗi khi truy xuất nhật ký kiểm toán",
+  "AUDITLOG_GET_ENTITY_FAILED": "Lỗi khi truy xuất nhật ký kiểm toán cho đối tượng",
+  "AUDITLOG_GET_COMPANY_FAILED": "Lỗi khi truy xuất nhật ký kiểm toán cho công ty",
+  "AUDITLOG_GET_USER_FAILED": "Lỗi khi truy xuất nhật ký kiểm toán cho người dùng",
+  "AUDITLOG_QUERY_FAILED": "Lỗi khi tìm kiếm nhật ký kiểm toán",
+  "AUDITLOG_CREATE_FAILED": "Tạo nhật ký kiểm toán thất bại",
+  "AUDITLOG_INVALID_DATE_RANGE": "Khoảng thời gian không hợp lệ. Ngày bắt đầu phải trước ngày kết thúc",
+  
   "CUSTOMER_NOTFOUND": "Không tìm thấy khách hàng với ID {0}",
   "CUSTOMER_CREATE_FAILED": "Tạo khách hàng thất bại",
   "CUSTOMER_UPDATE_FAILED": "Cập nhật khách hàng thất bại",

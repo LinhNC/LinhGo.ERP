@@ -37,6 +37,16 @@
   "AUTH_TOKEN_REFRESH_FAILED": "Token refresh failed",
   "AUTH_LOGOUT_FAILED": "Logout failed",
   
+  "AUDITLOG_NOTFOUND": "Audit log with ID {0} not found",
+  "AUDITLOG_GET_ID_FAILED": "Error retrieving audit log by ID",
+  "AUDITLOG_GET_PAGED_FAILED": "Error retrieving audit logs",
+  "AUDITLOG_GET_ENTITY_FAILED": "Error retrieving audit logs for entity",
+  "AUDITLOG_GET_COMPANY_FAILED": "Error retrieving audit logs for company",
+  "AUDITLOG_GET_USER_FAILED": "Error retrieving audit logs for user",
+  "AUDITLOG_QUERY_FAILED": "Error querying audit logs",
+  "AUDITLOG_CREATE_FAILED": "Failed to create audit log",
+  "AUDITLOG_INVALID_DATE_RANGE": "Invalid date range. From date must be before To date",
+  
   "CUSTOMER_NOTFOUND": "Customer with ID {0} not found",
   "CUSTOMER_CREATE_FAILED": "Failed to create customer",
   "CUSTOMER_UPDATE_FAILED": "Failed to update customer",
